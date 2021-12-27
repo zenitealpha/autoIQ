@@ -125,7 +125,6 @@ python-telegram-bot==13.8.1
 pytz==2021.3
 pytz-deprecation-shim==0.1.0.post0
 pyupgrade==2.19.1
-pywin32==302
 pywin32-ctypes==0.2.0
 pywinpty==1.1.6
 PyYAML==6.0
