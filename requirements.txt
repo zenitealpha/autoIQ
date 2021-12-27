@@ -1,0 +1,8 @@
+api-iqoption-faria==7.0.0
+pyTelegramBotAPI==4.2.2
+urllib3==1.24.3
+websocket-client==0.56.0
+PyGithub==1.55
+PyJWT==2.3.0
+PyNaCl==1.4.0
+Deprecated==1.2.13
