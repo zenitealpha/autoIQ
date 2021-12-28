@@ -98,76 +98,75 @@ def send_welcome(message):
             plano = str(data['plano'])
             mes_espiracao = int(data['mes_espiracao'])
 
-    if message.chat.type == 'private' and plano != 'admin' and plano != 'super_admin' and id_telegram == id_user and estado == 1:
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
-        itembtna = types.KeyboardButton('🤖Listar Bots')
-        markup.row(itembtna)
-        bot.send_message(message.chat.id,"Bem-vindo de Volta " + message.from_user.first_name +
-            "\nPara atualização do plano, contacte: @Zcreations1" +
-            "\nNão te esqueças de fornecer a ele o seu ID:"+str(message.from_user.id),reply_markup=markup)
-        '''
-        id_user = message.from_user.id
-        file = open("{}.txt".format(id_user), 'a+')
-        if (not nao_exist(str(id_user))):
-            file.close()
-        '''
+    try:
         
-    elif message.chat.type == 'private' and id_telegram != id_user:
+        if message.chat.type=='private' and id_telegram==id_user and estado==0:
+            bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
+                        " " + message.from_user.last_name + "?" +
+                        "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
+                        "\nContacte @Zcreations1 para obter acesso ao bot! ")
+        
+        elif message.chat.type=='private' and id_telegram==id_user and plano!='super_admin' and plano!='admin':
+
+            markup = types.ReplyKeyboardMarkup(row_width=-1)
+            itembtng = types.KeyboardButton('🤖Listar Bots')
+            markup.row(itembtng)
+            bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
+            '\nBem vindo de volta ao ROBÔ ALPHA',reply_markup=markup)
+
+        elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'super_admin':
+            '''
+            id_user = message.from_user.id
+            file = open("{}.txt".format(id_user), 'a+')
+            if (not nao_exist(str(id_user))):
+                file.close()
+            '''
+            markup = types.ReplyKeyboardMarkup(row_width=-1)
+            itembtna = types.KeyboardButton('✅Add usuário')
+            itembtnb = types.KeyboardButton('Excluir usuário')
+            itembtnc = types.KeyboardButton('Listar usuários')
+            itembtnd = types.KeyboardButton('Alterar Pacote')
+            itembtne = types.KeyboardButton('Alterar data de expiração')
+            itembtnf = types.KeyboardButton('Restringir usuário')
+            itembtng = types.KeyboardButton('🤖Listar Bots')
+            markup.row(itembtna, itembtnb)
+            markup.row(itembtnc, itembtnd, itembtne)
+            markup.row(itembtnf, itembtng)
+            bot.send_message(message.chat.id,
+                            "Bem-vindo de volta Super-Admin " +message.from_user.first_name,reply_markup=markup)
+
+        elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'admin':
+            '''
+            id_user = message.from_user.id
+            file = open("{}.txt".format(id_user), 'a+')
+            if (not nao_exist(str(id_user))):
+                file.close()
+            '''
+            markup = types.ReplyKeyboardMarkup(row_width=-1)
+            itembtna = types.KeyboardButton('Prestar Suporte')
+            itembtnb = types.KeyboardButton('Dados do Usuário')
+            itembtnc = types.KeyboardButton('Usuários Ativos')
+            itembtnd = types.KeyboardButton('Pacotes disponíveis')
+            itembtne = types.KeyboardButton('Verificação de Usuário')
+            itembtng = types.KeyboardButton('🤖Listar Bots')
+            markup.row(itembtna, itembtnb)
+            markup.row(itembtnc, itembtnd, itembtne)
+            markup.row(itembtng)
+            bot.send_message(message.chat.id,
+                            "Bem-vindo de volta Admin " +
+                            message.from_user.first_name,
+                            reply_markup=markup)
+
+        elif message.chat.type != 'private':
+            bot.send_message(message.chat.id,"Não tens permissão para usar este Bot")
+    
+    except:
         #message obtem os dados do usuário: id, nomes, data da sms, e o testo ou conteúdo enviado
         #a linha abaixo recupera o id, primeiro nome, e o último nome e enviar uma sms ao usuário de boas vindas
         bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
-                        "\nSeja bem vindo(a) ao ROBÔ FÉNIX este é o seu ID: " +str(message.chat.id) +
+                        "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
-
-    elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'super_admin':
-        '''
-        id_user = message.from_user.id
-        file = open("{}.txt".format(id_user), 'a+')
-        if (not nao_exist(str(id_user))):
-            file.close()
-        '''
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
-        itembtna = types.KeyboardButton('✅Add usuário')
-        itembtnb = types.KeyboardButton('Excluir usuário')
-        itembtnc = types.KeyboardButton('Listar usuários')
-        itembtnd = types.KeyboardButton('Alterar Pacote')
-        itembtne = types.KeyboardButton('Alterar data de expiração')
-        itembtnf = types.KeyboardButton('Restringir usuário')
-        itembtng = types.KeyboardButton('🤖Listar Bots')
-        markup.row(itembtna, itembtnb)
-        markup.row(itembtnc, itembtnd, itembtne)
-        markup.row(itembtnf, itembtng)
-        bot.send_message(message.chat.id,
-                         "Bem-vindo de volta Super-Admin " +
-                         message.from_user.first_name,
-                         reply_markup=markup)
-
-    elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'admin':
-        '''
-        id_user = message.from_user.id
-        file = open("{}.txt".format(id_user), 'a+')
-        if (not nao_exist(str(id_user))):
-            file.close()
-        '''
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
-        itembtna = types.KeyboardButton('Prestar Suporte')
-        itembtnb = types.KeyboardButton('Dados do Usuário')
-        itembtnc = types.KeyboardButton('Usuários Ativos')
-        itembtnd = types.KeyboardButton('Pacotes disponíveis')
-        itembtne = types.KeyboardButton('Verificação de Usuário')
-        itembtng = types.KeyboardButton('🤖Listar Bots')
-        markup.row(itembtna, itembtnb)
-        markup.row(itembtnc, itembtnd, itembtne)
-        markup.row(itembtng)
-        bot.send_message(message.chat.id,
-                         "Bem-vindo de volta Admin " +
-                         message.from_user.first_name,
-                         reply_markup=markup)
-
-    elif message.chat.type != 'private':
-        bot.send_message(message.chat.id,
-                         "Não tens permissão para usar este Bot")
 
 @bot.message_handler(func=lambda message: message.text == '🤖Listar Bots')
 def listar_bots(message):
@@ -873,7 +872,7 @@ def bot_catalogador(message):
                             if str(catalogacao[par][horario]['mg'+str(i+1)]['%']) != 'N/A':
                                 msg += ' | MG ' + str(i+1) + ' - ' + str(catalogacao[par][horario]['mg'+str(i+1)]['%']) + '%'
                             else:
-                                msg += ' | MG ' + str(i+1) + ' - N/A - N/A' 
+                                msg += ' | MG ' + str(i+1) + ' - N/A' 
                                 
                     bot.send_message(message.chat.id,msg)	
                     open('sinais_' + str((datetime.now()).strftime('%Y-%m-%d')) + '_' + str(timeframe) + 'M.txt', 'a').write(horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip() + '\n')
@@ -1478,3 +1477,4 @@ def process_guardar_cat_step(message):
 bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
 bot.infinity_polling(allowed_updates=util.update_types)
+
