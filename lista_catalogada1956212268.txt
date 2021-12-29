@@ -1,2 +1,2 @@
-b"b'CATALOGADOR DE SINAIS ALPHA'\r\n0"
-1
+b'b"b\'CATALOGADOR DE SINAIS ALPHA\'\\r\\n0"\r\n1'
+2
