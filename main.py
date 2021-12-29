@@ -817,7 +817,7 @@ def bot_catalogador(message):
 
         prct_call = abs(porcentagem)
         prct_put = abs(100 - porcentagem)
-
+        lista_catalogada=[]
         P = API.get_all_open_time()
         bot.send_message(message.chat.id,'Catalogando, por favor aguarde...')
         catalogacao = {}
@@ -873,11 +873,27 @@ def bot_catalogador(message):
                                 msg += ' | MG ' + str(i+1) + ' - ' + str(catalogacao[par][horario]['mg'+str(i+1)]['%']) + '%'
                             else:
                                 msg += ' | MG ' + str(i+1) + ' - N/A' 
-                                
-                    bot.send_message(message.chat.id,msg)	
-                    open('sinais_' + str((datetime.now()).strftime('%Y-%m-%d')) + '_' + str(timeframe) + 'M.txt', 'a').write(horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip() + '\n')
 
-
+                    #bot.send_document()            
+                    #bot.send_message(message.chat.id,msg)	
+                    #open('sinais_' + str((datetime.now()).strftime('%Y-%m-%d')) + '_' + str(timeframe) + 'M.txt', 'a').write(horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip() + '\n')
+                    c = horario+','+par+','+catalogacao[par][horario]['dir'].strip()
+                    lista_catalogada.append(c)
+                    
+        git_file ='lista_catalogada{}.txt'.format(message.chat.id)
+        if git_file in content:
+            contents = repo.get_contents("lista_catalogada{}.txt".format(message.chat.id))
+            repo.delete_file(contents.path, "remove lista_catalogada{}.txt".format(message.chat.id), contents.sha)
+            repo.create_file(git_file, "committing files", lista_catalogada)
+            doc = open('lista_catalogada{}.txt'.format(message.chat.id), 'rb')
+            bot.send_document(chat_id, doc)
+            bot.send_document(chat_id, "FILEID") 
+        else:
+            repo.create_file(git_file, "committing files", lista_catalogada)
+            doc = open('lista_catalogada{}.txt'.format(message.chat.id), 'rb')
+            bot.send_document(chat_id, doc)
+            bot.send_document(chat_id, "FILEID") 
+    
 @bot.message_handler(func=lambda message: message.text == 'Indicadores Técnicos')
 def bot_indicadores_tecnicos(message):
     markup = types.ReplyKeyboardMarkup(row_width=-1)
