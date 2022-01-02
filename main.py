@@ -103,7 +103,7 @@ def send_welcome(message):
         if message.chat.type=='private' and id_telegram==id_user and estado==0:
             bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
-                        "\nSeja bem vindo(a) ao AutoIQ este é o seu ID: " +str(message.chat.id) +
+                        "\nSeja bem vindo(a) a AutoIQ este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
         
         elif message.chat.type=='private' and id_telegram==id_user and plano!='super_admin' and plano!='admin':
@@ -112,7 +112,7 @@ def send_welcome(message):
             itembtng = types.KeyboardButton('🤖Listar Bots')
             markup.row(itembtng)
             bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
-            '\nBem vindo de volta ao AutoIQ',reply_markup=markup)
+            '\nBem vindo de volta a AutoIQ',reply_markup=markup)
 
         elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'super_admin':
             '''
@@ -158,14 +158,14 @@ def send_welcome(message):
                             reply_markup=markup)
 
         elif message.chat.type != 'private':
-            bot.send_message(message.chat.id,"Não tens permissão para acessar o AutoIQ")
+            bot.send_message(message.chat.id,"Não tens permissão para usar este Bot")
     
     except:
         #message obtem os dados do usuário: id, nomes, data da sms, e o testo ou conteúdo enviado
         #a linha abaixo recupera o id, primeiro nome, e o último nome e enviar uma sms ao usuário de boas vindas
         bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
-                        "\nSeja bem vindo(a) ao AutoIQ, este é o seu ID: " +str(message.chat.id) +
+                        "\nSeja bem vindo(a) a AutoIQ este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
 
 @bot.message_handler(func=lambda message: message.text == '🤖Listar Bots')
@@ -319,7 +319,7 @@ def bot_lista_sinais(message):
                 if d != False:
                     d = round(int(d) / 100, 2)
                     break
-                time.sleep(1)
+
             API.unsubscribe_strike_list(par, 1)
 
             return d
@@ -371,8 +371,14 @@ def bot_lista_sinais(message):
                 if len(sinal) > 0 and sinal != '':
                     sinal_ = sinal.split(',')
                     #formato da lista: TIMESTAMP,PARIDADE,call,1
-                    if sinal_[0] == datetime.now().strftime('%H:%M'):
-
+                    utcmoment_naive = datetime.utcnow()
+                    utcmoment = utcmoment_naive.replace(tzinfo=pytz.utc)
+                    localFormat = "%H:%M"
+                    timezones = ['America/Sao_Paulo']
+                    for tz in timezones:
+                        localDatetime = utcmoment.astimezone(pytz.timezone(tz))
+                        
+                    if str(sinal_[0]) == str(localDatetime.strftime(localFormat)):
                             sinais.append({'timestamp': sinal_[0],
                                             'par': sinal_[1],
                                             'dir': sinal_[2],
@@ -434,7 +440,7 @@ def bot_lista_sinais(message):
                                 RESULTADO: ''' + ('✅WIN' if valor > 0 else '🚨LOSS') + '''
                                 LUCRO: 💲''' + str(round(valor, 2)) + '''\n
                                 ''' + (str(i)+ ' ♻GALE' if i > 0 else '') + '''\n'''
-                                        bot.send_message(message.chat.id,msg)
+                                        bot.send_message(message.chat.id,str(msg))
                                     
                                         valor_entrada = Martingale(valor_entrada, payout)
                                         if lucro <= float('-' +str(abs(stop_loss))):
@@ -454,7 +460,7 @@ def bot_lista_sinais(message):
                                 break
                 print(ops+1, 'Operações abertas |', datetime.now().strftime('%H:%M:%S'), end='\r')
         except Exception as e:
-                        print("O Bot encontrou o erro abaixo:\n",e+'')
+                        print("O Bot encontrou o erro abaixo:\n",e)
 
     @bot.message_handler(func=lambda message: message.text == '🔴Desligar Bot de Sinais')
     def desligar_lista(message):
@@ -637,9 +643,7 @@ def bot_mhi(message):
                     for i in range(martingale):
 
                         status, id = API.buy_digital_spot(
-                            par, valor_entrada, dir,
-                            time_frame) if operacao == 1 else API.buy(
-                                valor_entrada, par, dir, time_frame)
+                        par, valor_entrada, dir,time_frame) if operacao == 1 else API.buy(valor_entrada, par, dir, time_frame)
 
                         if status:
                             while True:
@@ -653,8 +657,7 @@ def bot_mhi(message):
                                     valor = 0
 
                                 if status:
-                                    valor = valor if valor > 0 else float(
-                                        '-' + str(abs(valor_entrada)))
+                                    valor = valor if valor > 0 else float('-' + str(abs(valor_entrada)))
                                     lucro += round(valor, 2)
 
                                     msg = '''
@@ -817,7 +820,6 @@ def bot_catalogador(message):
 
         prct_call = abs(porcentagem)
         prct_put = abs(100 - porcentagem)
-        lista_catalogada=[]
         P = API.get_all_open_time()
         bot.send_message(message.chat.id,'Catalogando, por favor aguarde...')
         catalogacao = {}
@@ -874,26 +876,14 @@ def bot_catalogador(message):
                             else:
                                 msg += ' | MG ' + str(i+1) + ' - N/A' 
 
-                    #bot.send_document()            
-                    #bot.send_message(message.chat.id,msg)	
-                    #open('sinais_' + str((datetime.now()).strftime('%Y-%m-%d')) + '_' + str(timeframe) + 'M.txt', 'a').write(horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip() + '\n')
-                    c = horario+','+par+','+catalogacao[par][horario]['dir'].strip()
-                    lista_catalogada.append(c)
-                    
-        git_file ='lista_catalogada{}.txt'.format(message.chat.id)
-        if git_file in content:
-            contents = repo.get_contents("lista_catalogada{}.txt".format(message.chat.id))
-            repo.delete_file(contents.path, "remove lista_catalogada{}.txt".format(message.chat.id), contents.sha)
-            repo.create_file(git_file, "committing files", lista_catalogada)
-            doc = open('lista_catalogada{}.txt'.format(message.chat.id), 'rb')
-            bot.send_document(chat_id, doc)
-            bot.send_document(chat_id, "FILEID") 
-        else:
-            repo.create_file(git_file, "committing files", lista_catalogada)
-            doc = open('lista_catalogada{}.txt'.format(message.chat.id), 'rb')
-            bot.send_document(chat_id, doc)
-            bot.send_document(chat_id, "FILEID") 
-    
+                    open('sinais_' + str((datetime.now()).strftime('%Y-%m-%d')) + '_' + str(timeframe) + 'M.txt', 'a').write(horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip() + '\n')
+
+                    hora_cat = horario.split(':')
+                    hora_atual=datetime.now().strftime('%H:%M').split(':')
+                    if int(hora_cat[0])>=int(hora_atual[0]):
+                        rs = horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip()
+                        bot.send_message(message.chat.id,rs)
+
 @bot.message_handler(func=lambda message: message.text == 'Indicadores Técnicos')
 def bot_indicadores_tecnicos(message):
     markup = types.ReplyKeyboardMarkup(row_width=-1)
