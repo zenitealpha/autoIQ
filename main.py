@@ -1,15 +1,15 @@
-import sys, os, getpass, logging, configparser, base64, requests, telebot, time, json
+import telebot, time
 from time import time
 from iqoptionapi.stable_api import IQ_Option
-from datetime import datetime, timezone
+from datetime import datetime
 from telebot import types, util
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from github import Github
-from pprint import pprint
 from datetime import datetime, timedelta
-from colorama import init, Fore, Back
+from colorama import init
+import pytz
 
-api_bot = "5060827840:AAHoiNIuNlr8q3eHvhL2ADZSC6OvV_RY9II"
+#api_bot = "2118641728:AAG5uHqiYHEh3WRYc-gOtHSLOvAmGY4sh7U"
+api_bot="5060827840:AAHoiNIuNlr8q3eHvhL2ADZSC6OvV_RY9II"
 bot = telebot.TeleBot(api_bot)
 g = Github(login_or_token="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")
 repo = g.get_user().get_repo('autoIQ')
@@ -103,7 +103,7 @@ def send_welcome(message):
         if message.chat.type=='private' and id_telegram==id_user and estado==0:
             bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
-                        "\nSeja bem vindo(a) a AutoIQ este é o seu ID: " +str(message.chat.id) +
+                        "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
         
         elif message.chat.type=='private' and id_telegram==id_user and plano!='super_admin' and plano!='admin':
@@ -112,7 +112,7 @@ def send_welcome(message):
             itembtng = types.KeyboardButton('🤖Listar Bots')
             markup.row(itembtng)
             bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
-            '\nBem vindo de volta a AutoIQ',reply_markup=markup)
+            '\nBem vindo de volta ao ROBÔ ALPHA',reply_markup=markup)
 
         elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'super_admin':
             '''
@@ -165,7 +165,7 @@ def send_welcome(message):
         #a linha abaixo recupera o id, primeiro nome, e o último nome e enviar uma sms ao usuário de boas vindas
         bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
-                        "\nSeja bem vindo(a) a AutoIQ este é o seu ID: " +str(message.chat.id) +
+                        "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
 
 @bot.message_handler(func=lambda message: message.text == '🤖Listar Bots')
@@ -220,9 +220,9 @@ def listar_bots(message):
         itembtnb = types.KeyboardButton('MHI')
         itembtnc = types.KeyboardButton('Catalogador de Sinais')
         itembtnd = types.KeyboardButton('Estratégia Chinesa')
-        itembtne = types.KeyboardButton('CopyTrade')
+        itembtne = types.KeyboardButton('Tendência de sinais')
         itembtng = types.KeyboardButton('Estratégia Berman')
-        itembtnf = types.KeyboardButton('Indicadores Técnicos')
+        itembtnf = types.KeyboardButton('Tedência por Termómetro')
         itembtnh = types.KeyboardButton('Scalper')
         itembtni = types.KeyboardButton('✅Fazer Login')
         markup.row(itembtni)
@@ -716,10 +716,10 @@ def bot_estrategia_chinesa(message):
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id,"Bot de Estratégia Chinesa",reply_markup=markup)
 
-@bot.message_handler(func=lambda message: message.text == 'CopyTrade')
+@bot.message_handler(func=lambda message: message.text == 'Tendência de sinais')
 def bot_copytrade(message):
     markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar')
+    itembtna = types.KeyboardButton('✅Ligar Tendência de sinais')
     itembtnb = types.KeyboardButton('Desligar')
     itembtnc = types.KeyboardButton('Configurações')
     itembtnd = types.KeyboardButton('Ajuda')
@@ -727,7 +727,67 @@ def bot_copytrade(message):
     markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
     markup.row(itembtnd, itembtne)
-    bot.send_message(message.chat.id, "Bot de CopyTrade", reply_markup=markup)
+    bot.send_message(message.chat.id, "Bot de Tendência de sinais", reply_markup=markup)
+
+    @bot.message_handler(func=lambda message: message.text == '✅Ligar Tendência de sinais')
+    def ligar_tendencia_sinal(message):
+        chat_id=message.from_user.id
+        dados_config_login = login_dict[chat_id]
+        id_user = message.from_user.id
+        dados_cli = cliente_permitido(str(id_user))
+        if len(dados_cli) > 0:
+            for data in dados_cli:
+                id_telegram = int(data['id_telegram'])
+                estado = int(data['estado'])
+                plano = str(data['plano'])
+                mes_espiracao = int(data['mes_espiracao'])
+
+        def Payout(par):
+            API.subscribe_strike_list(par, 1)
+            while True:
+                d = API.get_digital_current_profit(par, 1)
+                if d != False:
+                    d = round(int(d) / 100, 2)
+                    break
+                time.sleep(1)
+            API.unsubscribe_strike_list(par, 1)
+            return d
+        
+        if (dados_config_login.email == None) or (dados_config_login.senha
+                                                  == None):
+            bot.send_message(
+                message.chat.id,
+                '🚨Erro verifique os dados de Login e tente novamente🚨')
+        else:
+            usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
+            senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
+            API = IQ_Option(usuario, senha)
+            print(API.connect())
+
+        if API.check_connect():
+            bot.send_message(message.chat.id, '✅Conectado com sucesso!✅')
+        else:
+            bot.send_message(message.chat.id, '🚨Erro ao se conectar🚨')
+            return
+            
+        par = str(input('DIGITE A PARIDADE: '))
+        timeframe = int(input('DIGITE O TIMEFRAME: '))
+
+        velas = API.get_candles(par.upper(), (int(timeframe) * 60), 1000,  time.time())
+
+        ultimo = round(velas[0]['close'], 4)
+        primeiro = round(velas[-1]['close'], 4)
+
+        diferenca = abs( round( ( (ultimo - primeiro) / primeiro ) * 100, 3) )
+        tendencia = "CALL" if ultimo > primeiro and diferenca > 0.01 else "PUT"
+
+        print('\n====BOT DE TEDÊNCIA DE SINAL===='+
+            '\nParidade: '+str(par)+
+            '\nTime Frame: M'+str(timeframe)+
+            '\nPayout: '+str(int(Payout(par)*100))+'%'
+            '\nTendência da Próxima vela: '+str("CALL" if ultimo > primeiro and diferenca > 0.01 else "PUT")+
+            '\nUSE NO MÁXIMO 2 GALE EM CASO DE LOSS'
+            )
 
 @bot.message_handler(func=lambda message: message.text == 'Estratégia Berman')
 def bot_estrategia_berman(message):
@@ -777,7 +837,7 @@ def bot_catalogador(message):
             time_ = time()
             sair = False
             while sair == False:
-                velas = API.get_candles(par, (timeframe * 60), 300, time_)
+                velas = API.get_candles(par, (timeframe * 60), 3000, time_)
                 velas.reverse()
                 
                 for x in velas:	
@@ -884,7 +944,7 @@ def bot_catalogador(message):
                         rs = horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip()
                         bot.send_message(message.chat.id,rs)
 
-@bot.message_handler(func=lambda message: message.text == 'Indicadores Técnicos')
+@bot.message_handler(func=lambda message: message.text == 'Tedência por Termómetro')
 def bot_indicadores_tecnicos(message):
     markup = types.ReplyKeyboardMarkup(row_width=-1)
     itembtna = types.KeyboardButton('✅Ligar')
@@ -895,7 +955,7 @@ def bot_indicadores_tecnicos(message):
     markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
     markup.row(itembtnd, itembtne)
-    bot.send_message(message.chat.id, "Indicador Técnico", reply_markup=markup)
+    bot.send_message(message.chat.id, "Tedência por Termómetro", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text == 'Scalper')
 def bot_scalper(message):
@@ -1044,7 +1104,7 @@ def process_add_lista_step(message):
                     repo.create_file(git_file, "committing files", lista)
             else:
                 bot.reply_to(message, 'Envie pelo menos um sinal')
-
+            time.sleep(3)
             bot_lista_sinais(message)
         except Exception as e:
             bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
@@ -1468,7 +1528,7 @@ def process_guardar_cat_step(message):
                 '\nTime Frame: M'+str(dados.time_frame)+
                 '\nQuantidade de dias: '+str(dados.dias)+
                 '\nPorcentagem: '+str(dados.porcentagem)+
-                '\nNível de Martingale:'+str(dados.martingale))
+                '\nNível de Martingale: '+str(dados.martingale))
 
             bot_catalogador(message)
         else:
@@ -1483,4 +1543,3 @@ def process_guardar_cat_step(message):
 bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
 bot.infinity_polling(allowed_updates=util.update_types)
-
