@@ -777,7 +777,7 @@ def bot_catalogador(message):
             time_ = time()
             sair = False
             while sair == False:
-                velas = API.get_candles(par, (timeframe * 60), 1000, time_)
+                velas = API.get_candles(par, (timeframe * 60), 300, time_)
                 velas.reverse()
                 
                 for x in velas:	
