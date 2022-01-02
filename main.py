@@ -1104,7 +1104,6 @@ def process_add_lista_step(message):
                     repo.create_file(git_file, "committing files", lista)
             else:
                 bot.reply_to(message, 'Envie pelo menos um sinal')
-            time.sleep(3)
             bot_lista_sinais(message)
         except Exception as e:
             bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
@@ -1542,4 +1541,5 @@ def process_guardar_cat_step(message):
 
 bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
+time.sleep(3)
 bot.infinity_polling(allowed_updates=util.update_types)
