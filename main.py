@@ -1541,5 +1541,4 @@ def process_guardar_cat_step(message):
 
 bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
-time.sleep(3)
 bot.infinity_polling(allowed_updates=util.update_types)
