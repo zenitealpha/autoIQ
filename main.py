@@ -1,12 +1,12 @@
 import telebot, time
-from time import sleep, time
+from time import time
 from iqoptionapi.stable_api import IQ_Option
 from datetime import datetime
 from telebot import types, util
 from github import Github
 from datetime import datetime, timedelta
 from colorama import init
-import pytz, threading
+import pytz
 
 #api_bot = "2118641728:AAG5uHqiYHEh3WRYc-gOtHSLOvAmGY4sh7U"
 api_bot="5060827840:AAHoiNIuNlr8q3eHvhL2ADZSC6OvV_RY9II"
@@ -106,13 +106,13 @@ def send_welcome(message):
 
     try:
         
-        if id_telegram==id_user and estado==0:
+        if message.chat.type=='private' and id_telegram==id_user and estado==0:
             bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
                         "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
         
-        elif id_telegram==id_user and plano!='super_admin' and plano!='admin':
+        elif message.chat.type=='private' and id_telegram==id_user and plano!='super_admin' and plano!='admin':
 
             markup = types.ReplyKeyboardMarkup(row_width=-1)
             itembtng = types.KeyboardButton('🤖Listar Bots')
@@ -127,7 +127,7 @@ def send_welcome(message):
                     repo.create_file(git_file, "committing files", '')  
             except:
                 pass      
-        elif id_telegram == id_user and estado == 1 and plano == 'super_admin':
+        elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'super_admin':
             '''
             id_user = message.from_user.id
             file = open("{}.txt".format(id_user), 'a+')
@@ -156,7 +156,7 @@ def send_welcome(message):
             bot.send_message(message.chat.id,
                             "Bem-vindo de volta Super-Admin " +message.from_user.first_name,reply_markup=markup)
 
-        elif id_telegram == id_user and estado == 1 and plano == 'admin':
+        elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'admin':
             '''
             id_user = message.from_user.id
             file = open("{}.txt".format(id_user), 'a+')
@@ -186,8 +186,8 @@ def send_welcome(message):
                             message.from_user.first_name,
                             reply_markup=markup)
 
-        #elif message.chat.type != 'private':
-        #   bot.send_message(message.chat.id,"Não tens permissão para usar este Bot")
+        elif message.chat.type != 'private':
+            bot.send_message(message.chat.id,"Não tens permissão para usar este Bot")
     
     except:
         #message obtem os dados do usuário: id, nomes, data da sms, e o testo ou conteúdo enviado
@@ -1062,7 +1062,7 @@ def bot_indicadores_tecnicos(message):
             sumBuy = 0
             indicators = API.get_technical_indicators(par)
             for data in indicators:   
-                if int(data['candle_size'])==int(timec*60):
+                if int(timec*60)==int(data['candle_size']):
                     if data['group'] == 'OSCILLATORS':
                         oscHold = oscHold + str(data).count('hold')
                         oscShell = oscShell + str(data).count('sell')
