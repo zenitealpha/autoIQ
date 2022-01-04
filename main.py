@@ -1076,7 +1076,7 @@ def bot_indicadores_tecnicos(message):
                         sumShell = sumShell + str(data).count('sell')
                         sumBuy = sumBuy + str(data).count('buy')   
             timestamp_ = int(round(datetime.now().timestamp()))
-            f=datetime.fromtimestamp(timestamp_+(6*60)).strftime('%H:%M')               
+            f=datetime.fromtimestamp(timestamp_).strftime('%H:%M')               
             if oscdif != mavBuy:
                 oscdif = mavBuy
                 para_automaticamente=para_automaticamente+1
@@ -1269,7 +1269,7 @@ def process_add_lista_step(message):
 
 @bot.message_handler(func=lambda message: message.text == '⚙Configurar Termómetro')
 def Configurar_Termometro(message):
-        msg=bot.reply_to(message,"✅Dgite a Paridade a analisar✅"
+        msg=bot.reply_to(message,"✅Digite a Paridade a analisar✅"
                                  +"\nObs: O termómetro funciona apenas em mercado normal")
         bot.register_next_step_handler(msg, process_add_par_term)
 
