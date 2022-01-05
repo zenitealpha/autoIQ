@@ -106,13 +106,13 @@ def send_welcome(message):
 
     try:
         
-        if message.chat.type=='private' and id_telegram==id_user and estado==0:
+        if id_telegram==id_user and estado==0:
             bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
                         "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
         
-        elif message.chat.type=='private' and id_telegram==id_user and plano!='super_admin' and plano!='admin':
+        elif id_telegram==id_user and plano!='super_admin' and plano!='admin':
 
             markup = types.ReplyKeyboardMarkup(row_width=-1)
             itembtng = types.KeyboardButton('🤖Listar Bots')
@@ -127,7 +127,7 @@ def send_welcome(message):
                     repo.create_file(git_file, "committing files", '')  
             except:
                 pass      
-        elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'super_admin':
+        elif id_telegram == id_user and estado == 1 and plano == 'super_admin':
             '''
             id_user = message.from_user.id
             file = open("{}.txt".format(id_user), 'a+')
@@ -156,7 +156,7 @@ def send_welcome(message):
             bot.send_message(message.chat.id,
                             "Bem-vindo de volta Super-Admin " +message.from_user.first_name,reply_markup=markup)
 
-        elif message.chat.type == 'private' and id_telegram == id_user and estado == 1 and plano == 'admin':
+        elif id_telegram == id_user and estado == 1 and plano == 'admin':
             '''
             id_user = message.from_user.id
             file = open("{}.txt".format(id_user), 'a+')
@@ -186,7 +186,7 @@ def send_welcome(message):
                             message.from_user.first_name,
                             reply_markup=markup)
 
-        elif message.chat.type != 'private':
+        elif id_telegram != id_user:
             bot.send_message(message.chat.id,"Não tens permissão para usar este Bot")
     
     except:
@@ -643,8 +643,7 @@ def bot_mhi(message):
 
         lucro = 0
         payout = Payout(par)
-        bot.send_message(
-            message.chat.id, "✅Aguarde os resultados das suas operações✅\n" +
+        bot.send_message(message.chat.id, "✅Aguarde os resultados das suas operações✅\n" +
             "\t\t\tProcessando...")
         
         while ligado:
@@ -1138,7 +1137,7 @@ def voltar(message):
             estado = int(data['estado'])
             plano = str(data['plano'])
             mes_espiracao = int(data['mes_espiracao'])
-    if message.chat.type == "private" and estado == 1 and plano == "admin":
+    if estado == 1 and plano == "admin":
 
         markup = types.ReplyKeyboardMarkup(row_width=-1)
         itembtna = types.KeyboardButton('Prestar Suporte')
@@ -1154,7 +1153,7 @@ def voltar(message):
                          "=======ROBÔ ALPHA=======",
                          reply_markup=markup)
 
-    elif message.chat.type == "private" and estado == 1 and plano == "super_admin":
+    elif estado == 1 and plano == "super_admin":
 
         markup = types.ReplyKeyboardMarkup(row_width=-1)
         itembtna = types.KeyboardButton('✅Add usuário')
