@@ -1,16 +1,16 @@
 import telebot, time
-from time import time
+from time import sleep, time
 from iqoptionapi.stable_api import IQ_Option
 from datetime import datetime
 from telebot import types, util
 from github import Github
 from datetime import datetime, timedelta
 from colorama import init
-import pytz
+import pytz, threading
 
 #api_bot = "2118641728:AAG5uHqiYHEh3WRYc-gOtHSLOvAmGY4sh7U"
 api_bot="5060827840:AAHoiNIuNlr8q3eHvhL2ADZSC6OvV_RY9II"
-bot = telebot.TeleBot(api_bot)
+bot = telebot.TeleBot(api_bot, threaded=True, num_threads=10)
 g = Github(login_or_token="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")
 repo = g.get_user().get_repo('autoIQ')
 all_files = []
@@ -107,91 +107,94 @@ def send_welcome(message):
     try:
         
         if id_telegram==id_user and estado==0:
-            bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
+            bot.send_message(message.chat.id, "Olá tudo bem "+message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
                         "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
         
         elif id_telegram==id_user and plano!='super_admin' and plano!='admin':
 
-            markup = types.ReplyKeyboardMarkup(row_width=-1)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
             itembtng = types.KeyboardButton('🤖Listar Bots')
             markup.row(itembtng)
             bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
             '\nBem vindo de volta ao ROBÔ ALPHA',reply_markup=markup)
             try:
                 git_file ='lista_catalogada_{}.txt'.format(message.chat.id)
+                git_login ='login_{}.txt'.format(message.chat.id)
                 if git_file in content:
+                    pass
+                else:
+                    repo.create_file(git_file, "committing files", '') 
+
+                if git_login in content:
                     pass
                 else:
                     repo.create_file(git_file, "committing files", '')  
             except:
                 pass      
         elif id_telegram == id_user and estado == 1 and plano == 'super_admin':
-            '''
-            id_user = message.from_user.id
-            file = open("{}.txt".format(id_user), 'a+')
-            if (not nao_exist(str(id_user))):
-                file.close()
-            '''
+           
             try:
                 git_file ='lista_catalogada_{}.txt'.format(message.chat.id)
+                git_login ='login_{}.txt'.format(message.chat.id)
                 if git_file in content:
+                    pass
+                else:
+                    repo.create_file(git_file, "committing files", '') 
+                     
+                if git_login in content:
                     pass
                 else:
                     repo.create_file(git_file, "committing files", '')  
             except:
-                pass 
-            markup = types.ReplyKeyboardMarkup(row_width=-1)
+                pass     
+
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
             itembtna = types.KeyboardButton('✅Add usuário')
-            itembtnb = types.KeyboardButton('Excluir usuário')
-            itembtnc = types.KeyboardButton('Listar usuários')
-            itembtnd = types.KeyboardButton('Alterar Pacote')
-            itembtne = types.KeyboardButton('Alterar data de expiração')
-            itembtnf = types.KeyboardButton('Restringir usuário')
+            itembtnb = types.KeyboardButton('⛔Excluir usuário')
+            itembtnc = types.KeyboardButton('📖Listar usuários')
+            itembtnd = types.KeyboardButton('📨Alterar Pacote')
+            itembtne = types.KeyboardButton('📅Alterar data de expiração')
+            itembtnf = types.KeyboardButton('🚫Restringir usuário')
             itembtng = types.KeyboardButton('🤖Listar Bots')
             markup.row(itembtna, itembtnb)
-            markup.row(itembtnc, itembtnd, itembtne)
+            markup.row(itembtnc, itembtnd)
+            markup.row(itembtne)
             markup.row(itembtnf, itembtng)
-            bot.send_message(message.chat.id,
-                            "Bem-vindo de volta Super-Admin " +message.from_user.first_name,reply_markup=markup)
+            bot.send_message(message.chat.id,"Bem-vindo de volta Super-Admin " +message.from_user.first_name,reply_markup=markup)
 
         elif id_telegram == id_user and estado == 1 and plano == 'admin':
-            '''
-            id_user = message.from_user.id
-            file = open("{}.txt".format(id_user), 'a+')
-            if (not nao_exist(str(id_user))):
-                file.close()
-            '''
+           
             try:
                 git_file ='lista_catalogada_{}.txt'.format(message.chat.id)
+                git_login ='login_{}.txt'.format(message.chat.id)
                 if git_file in content:
+                    pass
+                else:
+                    repo.create_file(git_file, "committing files", '') 
+                     
+                if git_login in content:
                     pass
                 else:
                     repo.create_file(git_file, "committing files", '')  
             except:
-                pass 
-            markup = types.ReplyKeyboardMarkup(row_width=-1)
-            itembtna = types.KeyboardButton('Prestar Suporte')
-            itembtnb = types.KeyboardButton('Dados do Usuário')
-            itembtnc = types.KeyboardButton('Usuários Ativos')
-            itembtnd = types.KeyboardButton('Pacotes disponíveis')
-            itembtne = types.KeyboardButton('Verificação de Usuário')
+                pass     
+            
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+            itembtna = types.KeyboardButton('🛂Prestar Suporte')
+            itembtnb = types.KeyboardButton('📚Dados do Usuário')
+            itembtnc = types.KeyboardButton('👥Usuários Ativos')
+            itembtnd = types.KeyboardButton('📨Pacotes disponíveis')
+            itembtne = types.KeyboardButton('🔐Verificação de Usuário')
             itembtng = types.KeyboardButton('🤖Listar Bots')
             markup.row(itembtna, itembtnb)
-            markup.row(itembtnc, itembtnd, itembtne)
+            markup.row(itembtnc, itembtnd)
+            markup.row(itembtne)
             markup.row(itembtng)
-            bot.send_message(message.chat.id,
-                            "Bem-vindo de volta Admin " +
-                            message.from_user.first_name,
-                            reply_markup=markup)
+            bot.send_message(message.chat.id,"Bem-vindo de volta Admin "+message.from_user.first_name,reply_markup=markup)
 
-        elif id_telegram != id_user:
-            bot.send_message(message.chat.id,"Não tens permissão para usar este Bot")
-    
     except:
-        #message obtem os dados do usuário: id, nomes, data da sms, e o testo ou conteúdo enviado
-        #a linha abaixo recupera o id, primeiro nome, e o último nome e enviar uma sms ao usuário de boas vindas
         bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
                         " " + message.from_user.last_name + "?" +
                         "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
@@ -209,42 +212,31 @@ def listar_bots(message):
             mes_espiracao = int(data['mes_espiracao'])
 
     if (id_telegram == id_user) and (estado == 1) and plano == "Grátis":
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
-        itembtna = types.KeyboardButton('✅Fazer Login')
-        itembtnb = types.KeyboardButton('Bot de Lista de Sinais')
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+        itembtna = types.KeyboardButton('Bot de Lista de Sinais')
         markup.row(itembtna)
-        markup.row(itembtnb)
-        bot.send_message(message.chat.id,
-                         "Bot disponível para o plano grátis",
-                         reply_markup=markup)
+        bot.send_message(message.chat.id,"Bot disponível para o plano grátis",reply_markup=markup)
     elif (id_telegram == id_user) and (estado == 1) and plano == "Bronze":
 
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
         itembtna = types.KeyboardButton('Lista de Sinais')
         itembtnb = types.KeyboardButton('MHI')
-        itembtnc = types.KeyboardButton('✅Fazer Login')
-        markup.row(itembtnc)
-        markup.row(itembtna, itembtnb)
-        bot.send_message(message.chat.id,
-                         "Bots disponíveis para o plano bronze",
-                         reply_markup=markup)
+        markup.row(itembtnb)
+        markup.row(itembtna)
+        bot.send_message(message.chat.id,"Bots disponíveis para o plano bronze",reply_markup=markup)
     elif (id_telegram == id_user) and (estado == 1) and plano == "Prata":
 
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
         itembtna = types.KeyboardButton('Lista de Sinais')
         itembtnb = types.KeyboardButton('MHI')
         itembtnc = types.KeyboardButton('Catalogador')
         itembtnd = types.KeyboardButton('Estratégia Chinesa')
-        itembtne = types.KeyboardButton('✅Fazer Login')
-        markup.row(itembtne)
-        markup.row(itembtna, itembtnb)
-        markup.row(itembtnc, itembtnd)
-        bot.send_message(message.chat.id,
-                         "Bots disponíveis para o plano prata",
-                         reply_markup=markup)
+        markup.row(itembtnb, itembtnc)
+        markup.row(itembtna, itembtnd)
+        bot.send_message(message.chat.id,"Bots disponíveis para o plano prata",reply_markup=markup)
     elif (id_telegram == id_user) and (estado == 1) and plano == "Ouro":
 
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
         itembtna = types.KeyboardButton('Lista de Sinais')
         itembtnb = types.KeyboardButton('MHI')
         itembtnc = types.KeyboardButton('Catalogador')
@@ -253,40 +245,32 @@ def listar_bots(message):
         itembtng = types.KeyboardButton('Estratégia Berman')
         itembtnf = types.KeyboardButton('Sinais ao Vivo')
         itembtnh = types.KeyboardButton('Scalper')
-        itembtni = types.KeyboardButton('✅Fazer Login')
-        markup.row(itembtni)
-        markup.row(itembtna, itembtnb)
-        markup.row(itembtnc, itembtnd, itembtne)
-        markup.row(itembtng, itembtnf, itembtnh)
+        markup.row(itembtnf)
+        markup.row(itembtnb,itembtne,itembtnh)
+        markup.row(itembtnc,itembtna)
+        markup.row(itembtnd, itembtng)
         bot.send_message(message.chat.id,"Bots disponíveis para o plano ouro",reply_markup=markup)
 
     elif (id_telegram == id_user) and (estado == 1) and plano == "Disponível":
 
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
         itembtna = types.KeyboardButton('Lista de Sinais')
         itembtnb = types.KeyboardButton('MHI')
         itembtnc = types.KeyboardButton('Catalogador')
         itembtnf = types.KeyboardButton('Sinais ao Vivo')
-        itembtni = types.KeyboardButton('✅Fazer Login')
-        markup.row(itembtni)
-        markup.row(itembtna)
-        markup.row(itembtnb, itembtnc)
         markup.row(itembtnf)
+        markup.row(itembtnb, itembtnc)
+        markup.row(itembtna)
         bot.send_message(message.chat.id,"Bots disponíveis até ao momento",reply_markup=markup)
 
-    elif (id_telegram == id_user) and (plano == "Grátis" or plano == "Bronze"
-                                       or plano == "Prata"
-                                       or plano == "Ouro") and estado != 1:
-        bot.send_message(
-            message.chat.id,
-            "Por Algum motivo você já não tem acesso ao Bot." +
+    elif (id_telegram == id_user) and (plano == "Grátis" or plano == "Bronze" or plano == "Prata" or plano == "Ouro") and estado != 1:
+        bot.send_message(message.chat.id,"Por Algum motivo você já não tem acesso ao Bot." +
             "\nContacte o suporte para lhe prestar ajuda: --> @Zcreations1")
 
-    elif ((id_telegram == id_user) and (estado == 1)
-          and plano == "admin") or ((id_telegram == id_user) and
-                                    (estado == 1) and plano == "super_admin"):
+    elif ((id_telegram == id_user) and (estado == 1) and plano == "admin") or ((id_telegram == id_user) 
+        and (estado == 1) and plano == "super_admin"):
 
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
         itembtna = types.KeyboardButton('Lista de Sinais')
         itembtnb = types.KeyboardButton('MHI')
         itembtnc = types.KeyboardButton('Catalogador')
@@ -296,11 +280,10 @@ def listar_bots(message):
         itembtnf = types.KeyboardButton('Sinais ao Vivo')
         itembtni = types.KeyboardButton('Scalper')
         itembtnh = types.KeyboardButton('🔙VOLTAR')
-        itembtnj = types.KeyboardButton('✅Fazer Login')
-        markup.row(itembtnj)
-        markup.row(itembtna, itembtnb)
-        markup.row(itembtnc, itembtnd, itembtne)
-        markup.row(itembtng, itembtnf, itembtni)
+        markup.row(itembtnf)
+        markup.row(itembtnb,itembtne,itembtni)
+        markup.row(itembtnc,itembtna)
+        markup.row(itembtnd, itembtng)
         markup.row(itembtnh)
         bot.send_message(message.chat.id,"====Bots Disponíveis====",reply_markup=markup)
 
@@ -311,20 +294,22 @@ def bot_lista_sinais(message):
         pass
     else:
         repo.create_file(git_file, "committing files", '')
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar Bot de Sinais')
-    itembtnb = types.KeyboardButton('🔴Desligar Bot de Sinais')
-    itembtnc = types.KeyboardButton('Adicionar Sinais')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtng = types.KeyboardButton('🔐Fazer Login')
+    itembtna = types.KeyboardButton('✅Ligar bot de sinais')
+    itembtnb = types.KeyboardButton('🔴Desligar bot de sinais')
+    itembtnc = types.KeyboardButton('📖Adicionar Sinais')
     itembtnd = types.KeyboardButton('⚙Configurar Bot de Sinais')
     itembtne = types.KeyboardButton('🆘Ajuda')
     itembtnf = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna, itembtnb)
+    markup.row(itembtnc)
     markup.row(itembtnd)
-    markup.row(itembtnc, itembtne)
-    markup.row(itembtnf)
+    markup.row(itembtng)
+    markup.row(itembtna, itembtnb)
+    markup.row(itembtne, itembtnf)
     bot.send_message(message.chat.id,"Bot de lista de sinais",reply_markup=markup)
 
-    @bot.message_handler(func=lambda message: message.text == '✅Ligar Bot de Sinais')
+    @bot.message_handler(func=lambda message: message.text == '✅Ligar bot de sinais')
     def ligar_lista(message):
         global ligado_sinais
         ligado_sinais = True
@@ -370,13 +355,20 @@ def bot_lista_sinais(message):
 
             return d
 
-        if (dados_config_login.email == None) or (dados_config_login.senha == None):
-            bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login, tente novamente🚨')
-        else:
-            usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
-            senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
-            API = IQ_Option(usuario, senha)
-            print(API.connect())
+        try:
+                
+            if (dados_config_login.email == None) or (dados_config_login.senha== None):
+
+                    bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login e tente novamente🚨')
+
+            else:
+                usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
+                senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
+                API = IQ_Option(usuario, senha)
+                print(API.connect())
+        except:
+                bot.send_message(message.chat.id, '🚨ERRO DE LOGIN🚨\n'
+                                                  +'Verifique os seu dados de login da IQ option\n')
 
         if API.check_connect():
             bot.send_message(message.chat.id, '✅Conectado com sucesso!✅')
@@ -391,8 +383,7 @@ def bot_lista_sinais(message):
             elif int(conta) == 2:
                 API.change_balance('REAL')  # PRACTICE / REAL
             else:
-                bot.send_message(message.chat.id,
-                                 "❌Erro ao escolher o tipo de conta❌")
+                bot.send_message(message.chat.id,"❌Erro ao escolher o tipo de conta❌")
         except:
             bot.send_message(message.chat.id, "❌Erro, tente novamente❌")
             return
@@ -412,19 +403,18 @@ def bot_lista_sinais(message):
                 file = open(arq_sinais, 'r').read()
             except:
                 print("Todos os sinais já foram analisados.")
-                exit()
+                return
             for index,sinal in enumerate(file.split('\n')):
                 if len(sinal) > 0 and sinal != '':
                     sinal_ = sinal.split(',')
                     #formato da lista: TIMESTAMP,PARIDADE,call,1
                     utcmoment_naive = datetime.utcnow()
                     utcmoment = utcmoment_naive.replace(tzinfo=pytz.utc)
-                    localFormat = "%H:%M"
                     timezones = ['America/Sao_Paulo']
                     for tz in timezones:
                         localDatetime = utcmoment.astimezone(pytz.timezone(tz))
                         
-                    if str(sinal_[0]) == str(localDatetime.strftime(localFormat)):
+                    if str(sinal_[0]) == str(localDatetime.strftime('%H:%M')):
                             sinais.append({'timestamp': sinal_[0],
                                             'par': sinal_[1],
                                             'dir': sinal_[2],
@@ -444,7 +434,7 @@ def bot_lista_sinais(message):
         lucro = 0
         bot.send_message(
             message.chat.id, "✅Aguarde os resultados das suas operações✅\n" +
-            "\t\t\tProcessando...")
+                            "⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳")
         ops=0
         try:
 
@@ -483,7 +473,7 @@ def bot_lista_sinais(message):
                                         msg = '''
                                 💹Resultado da operação💹\n
 
-                                RESULTADO: ''' + ('✅WIN' if valor > 0 else '🚨LOSS') + '''
+                                RESULTADO:''' + ('✅WIN' if valor > 0 else '🚨LOSS') + '''
                                 LUCRO: 💲''' + str(round(valor, 2)) + '''\n
                                 ''' + (str(i)+ ' ♻GALE' if i > 0 else '') + '''\n'''
                                         bot.send_message(message.chat.id,str(msg))
@@ -508,27 +498,32 @@ def bot_lista_sinais(message):
         except Exception as e:
                         print("O Bot encontrou o erro abaixo:\n",e)
 
-    @bot.message_handler(func=lambda message: message.text == '🔴Desligar Bot de Sinais')
-    def desligar_lista(message):
-        global ligado_sinais
-        ligado_sinais = False
-        bot.send_message(message.chat.id,"✅Bot de Lista de sinais desligado!✅")
-        return
+    try:
+        @bot.message_handler(func=lambda message: message.text == '🔴Desligar bot de sinais')
+        def desligar_lista(message):
+            global ligado_sinais
+            ligado_sinais = False
+            bot.send_message(message.chat.id,"🔴Bot de Lista de sinais desligado!🔴")
+            return
+    except:
+        pass
 
 @bot.message_handler(func=lambda message: message.text == 'MHI')
 def bot_mhi(message):
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar Bot de MHI')
-    itembtnb = types.KeyboardButton('🔴Desligar Bot de MHI')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtnf = types.KeyboardButton('🔐Fazer Login')
+    itembtna = types.KeyboardButton('✅Ligar MHI')
+    itembtnb = types.KeyboardButton('🔴Desligar MHI')
     itembtnc = types.KeyboardButton('⚙Configurar Bot de MHI')
     itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
+    markup.row(itembtnf)
+    markup.row(itembtna, itembtnb)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id, "Bot de MHI", reply_markup=markup)
     
-    @bot.message_handler(func=lambda message: message.text == '✅Ligar Bot de MHI')
+    @bot.message_handler(func=lambda message: message.text == '✅Ligar MHI')
     def ligar(message):
         global ligado
         ligado = True
@@ -567,16 +562,20 @@ def bot_mhi(message):
 
             return d
 
-        if (dados_config_login.email == None) or (dados_config_login.senha
-                                                  == None):
-            bot.send_message(
-                message.chat.id,
-                '🚨Erro verifique os dados de Login e tente novamente🚨')
-        else:
-            usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
-            senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
-            API = IQ_Option(usuario, senha)
-            print(API.connect())
+        try:
+                
+            if (dados_config_login.email == None) or (dados_config_login.senha== None):
+
+                    bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login e tente novamente🚨')
+
+            else:
+                usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
+                senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
+                API = IQ_Option(usuario, senha)
+                print(API.connect())
+        except:
+                bot.send_message(message.chat.id, '🚨ERRO DE LOGIN🚨\n'
+                                                  +'Verifique os seu dados de login da IQ option\n')
 
         if API.check_connect():
             bot.send_message(message.chat.id, '✅Conectado com sucesso!✅')
@@ -643,13 +642,13 @@ def bot_mhi(message):
 
         lucro = 0
         payout = Payout(par)
-        bot.send_message(message.chat.id, "✅Aguarde os resultados das suas operações✅\n" +
-            "\t\t\tProcessando...")
+        bot.send_message(
+            message.chat.id, "✅Aguarde os resultados das suas operações✅\n" +
+                             "⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳")
         
         while ligado:
             minutos = float(((datetime.now()).strftime('%M.%S'))[1:])
-            entrar = True if (minutos >= 4.58
-                              and minutos <= 5) or minutos >= 9.58 else False
+            entrar = True if (minutos >= 4.58 and minutos <= 5) or minutos >= 9.58 else False
 
             if entrar:
                 dir = False
@@ -698,7 +697,7 @@ def bot_mhi(message):
                                     msg = '''
                             💹Resultado da operação💹\n
 
-                            RESULTADO: ''' + ('✅WIN' if valor > 0 else '🚨LOSS') + '''
+                            RESULTADO:''' + ('✅WIN' if valor > 0 else '🚨LOSS') + '''
                             LUCRO: 💲''' + str(round(valor, 2)) + '''\n
                             ''' + (str(i)+ ' ♻GALE' if i > 0 else '') + '''\n'''
                                     bot.send_message(message.chat.id,msg)
@@ -726,12 +725,15 @@ def bot_mhi(message):
                             break
                             return
 
-    @bot.message_handler(func=lambda message: message.text == '🔴Desligar Bot de MHI')
-    def desligar(message):
-        global ligado
-        ligado = False
-        bot.send_message(message.chat.id,"✅Bot de MHI desligado!✅")
-        return
+    try:
+        @bot.message_handler(func=lambda message: message.text == '🔴Desligar MHI')
+        def desligar(message):
+            global ligado
+            ligado = False
+            bot.send_message(message.chat.id,"🔴Bot de MHI desligado!🔴")
+            return
+    except:
+        pass
         
 @bot.message_handler(func=lambda message: message.text == '🆘Ajuda')
 def ajuda(message):
@@ -740,31 +742,34 @@ def ajuda(message):
 
 @bot.message_handler(func=lambda message: message.text == 'Estratégia Chinesa')
 def bot_estrategia_chinesa(message):
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar')
-    itembtnb = types.KeyboardButton('Desligar')
-    itembtnc = types.KeyboardButton('Configurações')
-    itembtnd = types.KeyboardButton('Ajuda')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtnf = types.KeyboardButton('🔐Fazer Login')
+    itembtna = types.KeyboardButton('✅Ligar método chinês')
+    itembtnb = types.KeyboardButton('🔴Desligar método chinês')
+    itembtnc = types.KeyboardButton('⚙Configurar método chinês')
+    itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
+    markup.row(itembtnf)
+    markup.row(itembtna, itembtnb)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id,"Bot de Estratégia Chinesa",reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text == 'Tendência')
 def bot_copytrade(message):
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar Tendência de sinais')
-    itembtnb = types.KeyboardButton('Desligar')
-    itembtnc = types.KeyboardButton('Configurações')
-    itembtnd = types.KeyboardButton('Ajuda')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtnf = types.KeyboardButton('🔐Fazer Login')
+    itembtna = types.KeyboardButton('✅Ligar Tendência')
+    itembtnc = types.KeyboardButton('⚙Configurar bot de tendência')
+    itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
+    markup.row(itembtnf)
+    markup.row(itembtna)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id, "Bot de Tendência de sinais", reply_markup=markup)
 
-    @bot.message_handler(func=lambda message: message.text == '✅Ligar Tendência de sinais')
+    @bot.message_handler(func=lambda message: message.text == '✅Ligar Tendência')
     def ligar_tendencia_sinal(message):
         chat_id=message.from_user.id
         dados_config_login = login_dict[chat_id]
@@ -816,36 +821,40 @@ def bot_copytrade(message):
         diferenca = abs( round( ( (ultimo - primeiro) / primeiro ) * 100, 3) )
         tendencia = "CALL" if ultimo > primeiro and diferenca > 0.01 else "PUT"
 
-        print('\n====BOT DE TEDÊNCIA DE SINAL===='+
+        bot.send_message(message.chat.id,'❇====BOT DE TEDÊNCIA DE SINAL====❇'+
             '\nParidade: '+str(par)+
-            '\nTime Frame: M'+str(timeframe)+
+            '\n⏰: M'+str(timeframe)+
             '\nPayout: '+str(int(Payout(par)*100))+'%'
-            '\nTendência da Próxima vela: '+str("CALL" if ultimo > primeiro and diferenca > 0.01 else "PUT")+
-            '\nUSE NO MÁXIMO 2 GALE EM CASO DE LOSS'
+            '\nTendência da Próxima vela: '+str("💹CALL" if ultimo > primeiro and diferenca > 0.01 else "🛑PUT")+
+            '\n🚨USE NO MÁXIMO 🐔🐔 EM CASO DE 🛑LOSS🚨'
             )
 
 @bot.message_handler(func=lambda message: message.text == 'Estratégia Berman')
 def bot_estrategia_berman(message):
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar')
-    itembtnb = types.KeyboardButton('Desligar')
-    itembtnc = types.KeyboardButton('Configurações')
-    itembtnd = types.KeyboardButton('Ajuda')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtnf = types.KeyboardButton('🔐Fazer Login')
+    itembtna = types.KeyboardButton('✅Ligar EB')
+    itembtnb = types.KeyboardButton('🔴Desligar EB')
+    itembtnc = types.KeyboardButton('⚙Configurar EB')
+    itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
+    markup.row(itembtnf)
+    markup.row(itembtna, itembtnb)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id,"Bot de Estratégia Berman",reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text == 'Catalogador')
 def bot_catalogador(message):
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtnf = types.KeyboardButton('🔐Fazer Login')
     itembtna = types.KeyboardButton('✅Ligar Catalogador')
-    itembtnc = types.KeyboardButton('⚙Configurar Bot Catalogador')
-    itembtnd = types.KeyboardButton('Ajuda')
+    itembtnc = types.KeyboardButton('⚙Configurar Catalogador')
+    itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna)
     markup.row(itembtnc)
+    markup.row(itembtnf)
+    markup.row(itembtna)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id,"Catalogação de Sinais",reply_markup=markup)
 
@@ -855,10 +864,20 @@ def bot_catalogador(message):
         dados_config_cat = config_catalogador[chat_id]
         dados_config_login = login_dict[chat_id]
         init(autoreset=True)
-        usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
-        senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
-        API = IQ_Option(usuario, senha)
-        print(API.connect())
+        try:
+                
+            if (dados_config_login.email == None) or (dados_config_login.senha== None):
+
+                    bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login e tente novamente🚨')
+
+            else:
+                usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
+                senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
+                API = IQ_Option(usuario, senha)
+                print(API.connect())
+        except:
+                bot.send_message(message.chat.id, '🚨ERRO DE LOGIN🚨\n'
+                                                  +'Verifique os seu dados de login da IQ option\n')
 
         if API.check_connect():
             bot.send_message(message.chat.id, '✅Conectado com sucesso!✅')
@@ -981,149 +1000,176 @@ def bot_catalogador(message):
 
 @bot.message_handler(func=lambda message: message.text == 'Sinais ao Vivo')
 def bot_indicadores_tecnicos(message):
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar Termómetro')
-    itembtnb = types.KeyboardButton('🔴Desligar Termómetro')
-    itembtnc = types.KeyboardButton('⚙Configurar Termómetro')
-    itembtnd = types.KeyboardButton('Ajuda')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtnf = types.KeyboardButton('🔐Fazer Login')
+    itembtna = types.KeyboardButton('✅Ligar Sinais')
+    itembtnb = types.KeyboardButton('🔴Desligar Sinais')
+    itembtnc = types.KeyboardButton('⚙Configurar Sinais ao Vivo')
+    itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
+    markup.row(itembtnf)
+    markup.row(itembtna, itembtnb)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id,"🌡Tedência por Termómetro🌡", reply_markup=markup)
 
-    @bot.message_handler(func=lambda message: message.text == '✅Ligar Termómetro')
+    @bot.message_handler(func=lambda message: message.text == '✅Ligar Sinais')
     def ligar_termometro(message):
         global ligado
         ligado = True
         chat_id = message.chat.id
         dados_config_login = login_dict[chat_id]
         dados_config_term = config_term[chat_id]
-        if (dados_config_login.email == None) or (dados_config_login.senha
-                                                  == None):
-            bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login e tente novamente🚨')
-        else:
-            usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
-            senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
-            API = IQ_Option(usuario, senha)
-            print(API.connect())
 
-        if API.check_connect():
-            bot.send_message(message.chat.id, '✅Conectado com sucesso!✅')
-        else:
-            bot.send_message(message.chat.id, '🚨Erro ao se conectar🚨')
-            return
+        try:       
+            try:
+                    
+                if (dados_config_login.email == None) or (dados_config_login.senha== None):
 
-        def bin_payout(par, timeframe):
-            par = par.upper()
-            tb = API.get_all_profit()
-            API.subscribe_strike_list(par, timeframe)
-            tentativas = 0
-            while True:
-                d = API.get_digital_current_profit(par, timeframe)
-                if d != False:
-                    d = int(d)
-                    break                
-            API.unsubscribe_strike_list(par, timeframe)
-            
-            payout = {'binario': 0, 'digital': d}
-            vl = int(100 * tb[par]['binary'])
-            
-            return vl
+                        bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login e tente novamente🚨')
 
-        def Payout(par):
-            API.subscribe_strike_list(par, 1)
-            while True:
-                d = API.get_digital_current_profit(par, 1)
-                if d != False:
-                    d = round(int(d) / 100, 2)
+                else:
+                    usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
+                    senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
+                    API = IQ_Option(usuario, senha)
+                    print(API.connect())
+            except:
+                    bot.send_message(message.chat.id, '🚨ERRO DE LOGIN🚨\n'
+                                                    +'Verifique os seu dados de login da IQ option\n')
+                
+            if API.check_connect():
+                bot.send_message(message.chat.id, '✅Conectado com sucesso!✅')
+            else:
+                bot.send_message(message.chat.id, '🚨Erro ao se conectar🚨')
+                return
+
+            def bin_payout(par, timeframe):
+                par = par.upper()
+                tb = API.get_all_profit()
+                API.subscribe_strike_list(par, timeframe)
+                tentativas = 0
+                while True:
+                    d = API.get_digital_current_profit(par, timeframe)
+                    if d != False:
+                        d = int(d)
+                        break                
+                API.unsubscribe_strike_list(par, timeframe)
+                
+                payout = {'binario': 0, 'digital': d}
+                vl = int(100 * tb[par]['binary'])
+                
+                return vl
+
+            def Payout(par):
+                API.subscribe_strike_list(par, 1)
+                while True:
+                    d = API.get_digital_current_profit(par, 1)
+                    if d != False:
+                        d = round(int(d) / 100, 2)
+                        break
+                API.unsubscribe_strike_list(par, 1)
+
+                return (d*100)
+
+            par = str(dados_config_term.par).upper() # trader[1] # paridade
+            timec = int(dados_config_term.timeframe)#int(trader[2]) # time candle 1 5 15 min
+            oscdif = 30
+            para_automaticamente = 0
+            while ligado:
+                # Info Oscillators
+                oscHold = 0 
+                oscShell = 0
+                oscBuy = 0
+                # Info Moving Averages
+                mavHold = 0 
+                mavShell = 0
+                mavBuy = 0
+                #
+                sumHold = 0 
+                sumShell = 0
+                sumBuy = 0
+                try:
+                    indicators = API.get_technical_indicators(par)
+                except:
+                    bot.send_message(message.chat.id,'🚨Upsi, sua paridade não é elegível para ser usada neste Bot.🚨')
                     break
-            API.unsubscribe_strike_list(par, 1)
 
-            return (d*100)
+                for data in indicators:   
+                    if int(data['candle_size'])==int(timec*60):
+                        if data['group'] == 'OSCILLATORS':
+                            oscHold = oscHold + str(data).count('hold')
+                            oscShell = oscShell + str(data).count('sell')
+                            oscBuy = oscBuy + str(data).count('buy')                    
+                        if data['group'] == 'MOVING AVERAGES':
+                            mavHold = mavHold + str(data).count('hold')
+                            mavShell = mavShell + str(data).count('sell')
+                            mavBuy = mavBuy + str(data).count('buy')    
+                        if data['group'] == 'SUMMARY':
+                            sumHold = sumHold + str(data).count('hold')
+                            sumShell = sumShell + str(data).count('sell')
+                            sumBuy = sumBuy + str(data).count('buy')   
+                timestamp_ = int(round(datetime.now().timestamp()))
+                f=datetime.fromtimestamp(timestamp_).strftime('%H:%M')               
+                if oscdif != mavBuy:
+                    oscdif = mavBuy
+                    para_automaticamente=para_automaticamente+1
+                    #if para_automaticamente==10: break
+                    if (int(f.split(':')[1]) % int(timec))==0:
 
-        par = str(dados_config_term.par).upper() # trader[1] # paridade
-        timec = int(dados_config_term.timeframe)#int(trader[2]) # time candle 1 5 15 min
-        oscdif = 30
-        para_automaticamente = 0
-        while ligado:
-            # Info Oscillators
-            oscHold = 0 
-            oscShell = 0
-            oscBuy = 0
-            # Info Moving Averages
-            mavHold = 0 
-            mavShell = 0
-            mavBuy = 0
-            #
-            sumHold = 0 
-            sumShell = 0
-            sumBuy = 0
-            indicators = API.get_technical_indicators(par)
-            for data in indicators:   
-                if int(timec*60)==int(data['candle_size']):
-                    if data['group'] == 'OSCILLATORS':
-                        oscHold = oscHold + str(data).count('hold')
-                        oscShell = oscShell + str(data).count('sell')
-                        oscBuy = oscBuy + str(data).count('buy')                    
-                    if data['group'] == 'MOVING AVERAGES':
-                        mavHold = mavHold + str(data).count('hold')
-                        mavShell = mavShell + str(data).count('sell')
-                        mavBuy = mavBuy + str(data).count('buy')    
-                    if data['group'] == 'SUMMARY':
-                        sumHold = sumHold + str(data).count('hold')
-                        sumShell = sumShell + str(data).count('sell')
-                        sumBuy = sumBuy + str(data).count('buy')   
-            timestamp_ = int(round(datetime.now().timestamp()))
-            f=datetime.fromtimestamp(timestamp_).strftime('%H:%M')               
-            if oscdif != mavBuy:
-                oscdif = mavBuy
-                if ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavShell)+int(oscShell)+int(sumShell))) and  ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavHold)+int(oscHold)+int(sumHold))):
-                    #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
-                    message = bot.send_message(message.chat.id, 
-                    '✅## Tendência do Sinal ##✅\n\n'+
-                    '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
-                    '\n===========================\n'+
-                    '⏰'+str(f)+
-                    '\n✅CALL'+
-                    '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+                        if ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavShell)+int(oscShell)+int(sumShell))) and  ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavHold)+int(oscHold)+int(sumHold))):
+                            #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                            message = bot.send_message(message.chat.id, 
+                            '✅## Tendência do Sinal ##✅\n\n'+
+                            '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                            '\n===========================\n'+
+                            '⏰'+str(f)+
+                            '\n✅CALL'+
+                            '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+            
+                        elif ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavBuy)+int(oscBuy)+int(sumBuy))) and  ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavHold)+int(oscHold)+int(sumHold))):
+                            #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                            message = bot.send_message(message.chat.id, 
+                            '✅## Tendência do Sinal ##✅\n\n'+
+                            '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                            '\n===========================\n'+
+                            '⏰'+str(f)+
+                            '\n🔴PUT'+
+                            '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+                        elif ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavBuy)+int(oscBuy)+int(sumBuy))) and ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavShell)+int(oscShell)+int(sumShell))):
+                            #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                            message = bot.send_message(message.chat.id, 
+                            '✅## Tendência do Sinal ##✅\n\n'+
+                            '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                            '\n===========================\n'+
+                            '⏰'+str(f)+
+                            '\n🚨INDECISÃO--> NÃO ENTRAR'+
+                            '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+        except:
+            bot.send_message(message.chat.id,'🚨Upsi, verifique sua configuração.🚨\n'
+                                             'Obs.: OTC não é elegível para este Bot')
     
-                elif ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavBuy)+int(oscBuy)+int(sumBuy))) and  ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavHold)+int(oscHold)+int(sumHold))):
-                    #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
-                    message = bot.send_message(message.chat.id, 
-                    '✅## Tendência do Sinal ##✅\n\n'+
-                    '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
-                    '\n===========================\n'+
-                    '⏰'+str(f)+
-                    '\n🔴PUT'+
-                    '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
-                elif ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavBuy)+int(oscBuy)+int(sumBuy))) and ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavShell)+int(oscShell)+int(sumShell))):
-                    #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
-                    message = bot.send_message(message.chat.id, 
-                    '✅## Tendência do Sinal ##✅\n\n'+
-                    '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
-                    '\n===========================\n'+
-                    '⏰'+str(f)+
-                    '\n🚨INDECISÃO--> NÃO ENTRAR'+
-                    '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
-    
-    @bot.message_handler(func=lambda message: message.text == '🔴Desligar Termómetro')
-    def desligar_terM(message):
-        global ligado
-        ligado = False
-        bot.send_message(message.chat.id,"🔴Termómetro desligado!🔴")
-        return
+    try:
+        @bot.message_handler(func=lambda message: message.text == '🔴Desligar Sinais')
+        def desligar_terM(message):
+            global ligado
+            ligado = False
+            bot.send_message(message.chat.id,"🔴Sinais ao Vivo desligado!🔴")
+            return
+    except:
+        pass
                     
 @bot.message_handler(func=lambda message: message.text == 'Scalper')
 def bot_scalper(message):
-    markup = types.ReplyKeyboardMarkup(row_width=-1)
-    itembtna = types.KeyboardButton('✅Ligar')
-    itembtnb = types.KeyboardButton('Desligar')
-    itembtnc = types.KeyboardButton('Configurações')
-    itembtnd = types.KeyboardButton('Ajuda')
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+    itembtnf = types.KeyboardButton('🔐Fazer Login')
+    itembtna = types.KeyboardButton('✅Ligar Scalper')
+    itembtnb = types.KeyboardButton('🔴Desligar Scalper')
+    itembtnc = types.KeyboardButton('⚙Configurar Scalper')
+    itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
-    markup.row(itembtna, itembtnb)
     markup.row(itembtnc)
+    markup.row(itembtnf)
+    markup.row(itembtna, itembtnb)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id, "Bot de Scalper", reply_markup=markup)
 
@@ -1139,7 +1185,7 @@ def voltar(message):
             mes_espiracao = int(data['mes_espiracao'])
     if estado == 1 and plano == "admin":
 
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
         itembtna = types.KeyboardButton('Prestar Suporte')
         itembtnb = types.KeyboardButton('Dados do Usuário')
         itembtnc = types.KeyboardButton('✅Usuários Ativos')
@@ -1147,30 +1193,28 @@ def voltar(message):
         itembtne = types.KeyboardButton('Verificação de Usuário')
         itembtng = types.KeyboardButton('🤖Listar Bots')
         markup.row(itembtna, itembtnb)
-        markup.row(itembtnc, itembtnd, itembtne)
+        markup.row(itembtnc, itembtnd)
+        markup.row(itembtne)
         markup.row(itembtng)
-        bot.send_message(message.chat.id,
-                         "=======ROBÔ ALPHA=======",
-                         reply_markup=markup)
+        bot.send_message(message.chat.id,"=======ROBÔ ALPHA=======",reply_markup=markup)
 
     elif estado == 1 and plano == "super_admin":
 
-        markup = types.ReplyKeyboardMarkup(row_width=-1)
-        itembtna = types.KeyboardButton('✅Add usuário')
-        itembtnb = types.KeyboardButton('Excluir usuário')
-        itembtnc = types.KeyboardButton('Listar usuários')
-        itembtnd = types.KeyboardButton('Alterar Pacote')
-        itembtne = types.KeyboardButton('Alterar data de expiração')
-        itembtnf = types.KeyboardButton('Restringir usuário')
-        itembtng = types.KeyboardButton('🤖Listar Bots')
-        markup.row(itembtna, itembtnb)
-        markup.row(itembtnc, itembtnd, itembtne)
-        markup.row(itembtnf, itembtng)
-        bot.send_message(message.chat.id,
-                         "=======ROBÔ ALPHA=======",
-                         reply_markup=markup)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+            itembtna = types.KeyboardButton('✅Add usuário')
+            itembtnb = types.KeyboardButton('Excluir usuário')
+            itembtnc = types.KeyboardButton('Listar usuários')
+            itembtnd = types.KeyboardButton('Alterar Pacote')
+            itembtne = types.KeyboardButton('Alterar data de expiração')
+            itembtnf = types.KeyboardButton('Restringir usuário')
+            itembtng = types.KeyboardButton('🤖Listar Bots')
+            markup.row(itembtna, itembtnb)
+            markup.row(itembtnc, itembtnd)
+            markup.row(itembtne)
+            markup.row(itembtnf, itembtng)
+            bot.send_message(message.chat.id,"=======ROBÔ ALPHA=======",reply_markup=markup)
 
-@bot.message_handler(func=lambda message: message.text == '✅Fazer Login')
+@bot.message_handler(func=lambda message: message.text == '🔐Fazer Login')
 def fazer_login(message):
     msg = bot.reply_to(message,
                        "🔐Entrar na iq Option🔐\n" + "Digite seu Email:")
@@ -1203,45 +1247,29 @@ def process_senha_step(message):
             return
         dados = login_dict[chat_id]
         dados.senha = senha
-        markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-        markup.add('✅Salvar', '🔙Cancelar')
-        msg = bot.reply_to(message,
-                           '✅Desejas salvar os dados?✅',
-                           reply_markup=markup)
-        bot.register_next_step_handler(msg, salvar_iq_option)
-    except Exception as e:
+        try:
+            chat_id = message.chat.id
+            dados = login_dict[chat_id]
+            id_user = message.from_user.id
+            dados_cli = cliente_permitido(str(id_user))
+            if len(dados_cli) > 0:
+                for data in dados_cli:
+                    id_telegram = int(data['id_telegram'])
+                    estado = int(data['estado'])
+
+            if estado == 1 and id_telegram==chat_id:
+
+                bot.send_message(message.chat.id, "✅Dados salvos com sucesso✅")
+
+            elif estado != 1 or id_telegram==chat_id:
+                dados.email = None
+                dados.senha = None
+        except:
+            bot.reply_to(message, 'Email/Senha não foram salvos! \nOpção inválida tente novamente')
+    except:
         bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
 
-def salvar_iq_option(message):
-    try:
-        chat_id = message.chat.id
-        salvar = message.text
-        dados = login_dict[chat_id]
-        id_user = message.from_user.id
-        dados_cli = cliente_permitido(str(id_user))
-        if len(dados_cli) > 0:
-            for data in dados_cli:
-                id_telegram = int(data['id_telegram'])
-                estado = int(data['estado'])
-                plano = str(data['plano'])
-                mes_espiracao = int(data['mes_espiracao'])
-
-        if (salvar == u'✅Salvar') and estado == 1:
-
-            bot.send_message(
-                message.chat.id, "✅Dados salvos com sucesso✅" + "\nEmail: " +
-                str(dados.email) + "\nSenha: " + str(dados.senha))
-            listar_bots(message)
-
-        elif (salvar == u'🔙Cancelar'):
-            dados.email = None
-            dados.senha = None
-            listar_bots(message)
-    except Exception as e:
-        bot.reply_to(message, 'Email/Senha não foram salvos!' +
-            '\nOpção inválida por falta de email e senha')
-
-@bot.message_handler(func=lambda message: message.text == 'Adicionar Sinais')
+@bot.message_handler(func=lambda message: message.text == '📖Adicionar Sinais')
 def add_lista(message):
         msg=bot.reply_to(message, "✅Digite sua lista de sinais✅"
                                          +"\nPara tal tenha em conta o seguinte formato:\n"+
@@ -1263,9 +1291,9 @@ def process_add_lista_step(message):
         except Exception as e:
             bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
 
-@bot.message_handler(func=lambda message: message.text == '⚙Configurar Termómetro')
+@bot.message_handler(func=lambda message: message.text == '⚙Configurar Sinais ao Vivo')
 def Configurar_Termometro(message):
-        msg=bot.reply_to(message,"✅Digite a Paridade a analisar✅"
+        msg=bot.reply_to(message,"✅Dgite a Paridade a analisar✅"
                                  +"\nObs: O termómetro funciona apenas em mercado normal")
         bot.register_next_step_handler(msg, process_add_par_term)
 
@@ -1456,17 +1484,14 @@ def process_stop_gain_step(message):
             chat_id = message.chat.id
             stop_gain = message.text
             if float(stop_gain) < 1:
-                msg = bot.reply_to(
-                    message, '❌Opção inválida, digite apenas número e maior que 0')
+                msg = bot.reply_to(message, '❌Opção inválida, digite apenas número e maior que 0')
                 bot.register_next_step_handler(msg, process_stop_gain_step)
                 return
             dados = config_mhi[chat_id]
             dados.stop_gain = stop_gain
-            markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
             markup.add('✅Guardar', 'Alterar')
-            msg = bot.reply_to(message,
-                            '✅Desejas guardar os dados?✅',
-                            reply_markup=markup)
+            msg = bot.reply_to(message,'✅Desejas guardar os dados?✅',reply_markup=markup)
             bot.register_next_step_handler(msg, process_guardar_mhi_step)
         except Exception as e:
             bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
@@ -1481,12 +1506,13 @@ def process_guardar_mhi_step(message):
                 bot.send_message(message.chat.id, '✅Dados inseridos com sucesso✅' +
                     '\nTipo de Conta: '+('Real' if int(dados.conta)==2 else 'Treinamento')
                     +'\nOperar na: '+('Digital' if int(dados.operacao)==1 else 'Binária') 
-                    +'\nTipo de MHI: '+ 'Minoria' if int(dados.tipo_mhi)==1 else 'Maioria' +
-                    '\nTime Frame: M' + str(dados.time_frame) + '\nParidade: ' +
-                    str(dados.par) + '\nValor de entrada: ' +
-                    str(dados.valor_entrada) + '\nNível de Martingale:' +
-                    str(dados.martingale) + '\nStop Loss: ' +
-                    str(dados.stop_loss) + '\nStop Gain: ' + str(dados.stop_gain))
+                    +'\nTipo de MHI: '+('Minoria' if int(dados.tipo_mhi)==1 else 'Maioria')
+                    +'\nTime Frame: M' + str(dados.time_frame) 
+                    +'\nParidade: '+str(dados.par)
+                    +'\nValor de entrada: '+str(dados.valor_entrada) 
+                    +'\nNível de Martingale: '+str(dados.martingale) 
+                    +'\nStop Loss: '+str(dados.stop_loss)
+                    +'\nStop Gain: '+str(dados.stop_gain))
 
                 bot_mhi(message)
 
@@ -1600,7 +1626,7 @@ def process_stop_gain_sinais_step(message):
                 return
             dados = config_lista_sinais[chat_id]
             dados.stop_gain = stop_gain
-            markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
             markup.add('✅Guardar', 'Alterar')
             msg = bot.reply_to(message,'✅Desejas guardar os dados?✅',reply_markup=markup)
             bot.register_next_step_handler(msg, process_guardar_sinais_step)
@@ -1618,8 +1644,8 @@ def process_guardar_sinais_step(message):
                     '\nTipo de Conta: '+('Real' if int(dados.conta)==2 else 'Treinamento')
                     +'\nOperar na: '+('Digital' if int(dados.operacao)==1 else 'Binária')
                     +'\nValor de entrada: '+str(dados.valor_entrada) + 
-                    '\nNível de Martingale:' +str(dados.martingale) + '\nStop Loss: ' +
-                    str(dados.stop_loss) + '\nStop Gain: ' + str(dados.stop_gain))
+                    '\nNível de Martingale:' +str(dados.martingale) + '\nStop Loss: '+
+                    str(dados.stop_loss) + '\nStop Gain: '+ str(dados.stop_gain))
 
                 bot_lista_sinais(message)
 
@@ -1637,7 +1663,7 @@ def process_guardar_sinais_step(message):
         except Exception as e:
             bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
 
-@bot.message_handler(func=lambda message: message.text == '⚙Configurar Bot Catalogador')
+@bot.message_handler(func=lambda message: message.text == '⚙Configurar Catalogador')
 def config_do_catalogador(message):
         msg = bot.reply_to(message,"Indique o Time Frame a analizar:")
         bot.register_next_step_handler(msg, process_time_frame_cat_step)
@@ -1697,7 +1723,7 @@ def process_martingale_cat_step(message):
                 return
             dados = config_catalogador[chat_id]
             dados.martingale = martingale
-            markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
             markup.add('✅Guardar', 'Cancelar')
             msg = bot.reply_to(message,'✅Desejas guardar os dados?✅',reply_markup=markup)
             bot.register_next_step_handler(msg, process_guardar_cat_step)
