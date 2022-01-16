@@ -7,15 +7,39 @@ from github import Github
 from datetime import datetime, timedelta
 from colorama import init
 import pytz, threading
+from bs4 import BeautifulSoup
+import requests
 
 #api_bot = "2118641728:AAG5uHqiYHEh3WRYc-gOtHSLOvAmGY4sh7U"
 api_bot="5060827840:AAHoiNIuNlr8q3eHvhL2ADZSC6OvV_RY9II"
 bot = telebot.TeleBot(api_bot, threaded=True, num_threads=10)
-g = Github(login_or_token="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")
+g = Github(login_or_token="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",timeout=5*60)
 repo = g.get_user().get_repo('autoIQ')
 all_files = []
 contents = repo.get_contents("")
 content = str(contents)
+
+def noticias(par, horario_):
+    headers = requests.utils.default_headers()
+    headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:79.0) Gecko/20100101 Firefox/79.0'})
+    data = requests.get('http://br.investing.com/economic-calendar/', headers=headers)
+    resultados = []
+    if data.status_code == requests.codes.ok:
+        info = BeautifulSoup(data.text, 'html.parser')
+        blocos = ((info.find('table', {'id': 'economicCalendarData'})).find('tbody')).findAll('tr', {'class': 'js-event-item'})
+        for blocos2 in blocos:
+            impacto = str((blocos2.find('td', {'class': 'sentiment'})).get('data-img_key')).replace('bull', '')
+            horario = str(blocos2.get('data-event-datetime')).replace('/', '-')
+            moeda = (blocos2.find('td', {'class': 'left flagCur noWrap'})).text.strip()
+            resultados.append({'par': moeda, 'horario': horario, 'impacto': impacto})
+    for info in resultados:
+        if str(par).upper()==str(info['par']).upper() and (horario_==info['horario'][11:16]) and int(info['impacto'])>=2:
+            return True
+        elif str(par).upper()==str(info['par']).upper() and ((horario_==info['horario'][11:16])) and int(info['impacto'])==1:
+            return 'Notícia'
+            #print('PARIDADE: ', info['par'],'\n HORARIO: ', info['horario'], '\n IMPACTO: ', info['impacto'], '\n--------\n')
+        else:
+            return False
 
 login_dict = {}
 class login:
@@ -51,6 +75,19 @@ class termometro_config:
     def __init__(self, par):
         self.par = par
         self.timeframe = None
+
+config_tend = {}
+class tendencia_config:
+    def __init__(self, conta):
+        self.conta = conta
+        self.operacao = None
+        self.time_frame = None
+        self.par = None
+        self.valor_entrada = None
+        self.martingale = None
+        self.stop_loss = None
+        self.stop_gain = None
+        
         
 config_catalogador = {}
 class catalogador_config:
@@ -413,8 +450,9 @@ def bot_lista_sinais(message):
                     timezones = ['America/Sao_Paulo']
                     for tz in timezones:
                         localDatetime = utcmoment.astimezone(pytz.timezone(tz))
-                        
-                    if str(sinal_[0]) == str(localDatetime.strftime('%H:%M')):
+                    
+                    f=localDatetime.strftime('%H:%M')
+                    if str(sinal_[0]) == str(localDatetime.strftime('%H:%M')) and (noticias(par[3:6], f)!=True or noticias(par[0:3], f)!=True):
                             sinais.append({'timestamp': sinal_[0],
                                             'par': sinal_[1],
                                             'dir': sinal_[2],
@@ -665,7 +703,8 @@ def bot_mhi(message):
                 if cores.count('r') > cores.count('g') and cores.count('d') == 0:
                     dir = ('call' if tipo_mhi == 1 else 'put')
 
-                if dir:
+                f=datetime.now().strftime('%H:%M')
+                if dir and (noticias(par[3:6], f)!=True or noticias(par[0:3], f)!=True):
 
                     bot.send_message(message.chat.id, '✅Uma operação em andamento✅' +
                         '\nTempo de análise: ' + str(minutos) + '⏰' +
@@ -675,7 +714,7 @@ def bot_mhi(message):
 
                     valor_entrada = valor_entrada_b
                     for i in range(martingale):
-
+                        
                         status, id = API.buy_digital_spot(
                         par, valor_entrada, dir,time_frame) if operacao == 1 else API.buy(valor_entrada, par, dir, time_frame)
 
@@ -756,22 +795,26 @@ def bot_estrategia_chinesa(message):
     bot.send_message(message.chat.id,"Bot de Estratégia Chinesa",reply_markup=markup)
 
 @bot.message_handler(func=lambda message: message.text == 'Tendência')
-def bot_copytrade(message):
+def bot_tendencia(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
     itembtnf = types.KeyboardButton('🔐Fazer Login')
     itembtna = types.KeyboardButton('✅Ligar Tendência')
-    itembtnc = types.KeyboardButton('⚙Configurar bot de tendência')
+    itembtnb = types.KeyboardButton('🔴Desligar Tendência')
+    itembtnc = types.KeyboardButton('⚙Configurar Tendência')
     itembtnd = types.KeyboardButton('🆘Ajuda')
     itembtne = types.KeyboardButton('🤖Listar Bots')
     markup.row(itembtnc)
     markup.row(itembtnf)
-    markup.row(itembtna)
+    markup.row(itembtna,itembtnb)
     markup.row(itembtnd, itembtne)
     bot.send_message(message.chat.id, "Bot de Tendência de sinais", reply_markup=markup)
 
     @bot.message_handler(func=lambda message: message.text == '✅Ligar Tendência')
     def ligar_tendencia_sinal(message):
-        chat_id=message.from_user.id
+        global ligado
+        ligado = True
+        chat_id = message.chat.id
+        dados_config_tend = config_tend[chat_id]
         dados_config_login = login_dict[chat_id]
         id_user = message.from_user.id
         dados_cli = cliente_permitido(str(id_user))
@@ -781,6 +824,17 @@ def bot_copytrade(message):
                 estado = int(data['estado'])
                 plano = str(data['plano'])
                 mes_espiracao = int(data['mes_espiracao'])
+        
+        def Martingale(valor, payout):
+            lucro_esperado = valor * payout
+            perca = float(valor)
+
+            while True:
+                if round(valor * payout, 2) > round(
+                        abs(perca) + lucro_esperado, 2):
+                    return round(valor, 2)
+                    break
+                valor += 0.01
 
         def Payout(par):
             API.subscribe_strike_list(par, 1)
@@ -789,45 +843,188 @@ def bot_copytrade(message):
                 if d != False:
                     d = round(int(d) / 100, 2)
                     break
-                time.sleep(1)
             API.unsubscribe_strike_list(par, 1)
+
             return d
-        
-        if (dados_config_login.email == None) or (dados_config_login.senha
-                                                  == None):
-            bot.send_message(
-                message.chat.id,
-                '🚨Erro verifique os dados de Login e tente novamente🚨')
-        else:
-            usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
-            senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
-            API = IQ_Option(usuario, senha)
-            print(API.connect())
+
+        try:
+                
+            if (dados_config_login.email == None) or (dados_config_login.senha== None):
+
+                    bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login e tente novamente🚨')
+
+            else:
+                usuario = dados_config_login.email  # input("Digite o usuário da IQ Option: ")
+                senha = dados_config_login.senha  #getpass.getpass(f"Digite a senha da IQ Option: ")
+                API = IQ_Option(usuario, senha)
+                print(API.connect())
+        except:
+                bot.send_message(message.chat.id, '🚨ERRO DE LOGIN🚨\n'
+                                                  +'Verifique os seu dados de login da IQ option\n')
 
         if API.check_connect():
             bot.send_message(message.chat.id, '✅Conectado com sucesso!✅')
         else:
             bot.send_message(message.chat.id, '🚨Erro ao se conectar🚨')
             return
-            
-        par = str(input('DIGITE A PARIDADE: '))
-        timeframe = int(input('DIGITE O TIMEFRAME: '))
 
-        velas = API.get_candles(par.upper(), (int(timeframe) * 60), 1000,  time.time())
+        try:
 
-        ultimo = round(velas[0]['close'], 4)
-        primeiro = round(velas[-1]['close'], 4)
+            conta = int(
+                dados_config_tend.conta
+            )  #int(input('\nEscolha em qual conta Operar:\n 1 - Treinamento\n 2 - REAL\n:: '))
 
-        diferenca = abs( round( ( (ultimo - primeiro) / primeiro ) * 100, 3) )
-        tendencia = "CALL" if ultimo > primeiro and diferenca > 0.01 else "PUT"
+            if int(conta) == 1:
+                API.change_balance('PRACTICE')
+            elif int(conta) == 2:
+                API.change_balance('REAL')  # PRACTICE / REAL
+            else:
+                bot.send_message(message.chat.id,
+                                 "❌Erro ao escolher o tipo de conta❌")
+        except:
+            bot.send_message(message.chat.id, "❌Erro, tente novamente❌")
+            return
 
-        bot.send_message(message.chat.id,'❇====BOT DE TEDÊNCIA DE SINAL====❇'+
-            '\nParidade: '+str(par)+
-            '\n⏰: M'+str(timeframe)+
-            '\nPayout: '+str(int(Payout(par)*100))+'%'
-            '\nTendência da Próxima vela: '+str("💹CALL" if ultimo > primeiro and diferenca > 0.01 else "🛑PUT")+
-            '\n🚨USE NO MÁXIMO 🐔🐔 EM CASO DE 🛑LOSS🚨'
-            )
+        while True:
+            try:
+                operacao = int(dados_config_tend.operacao)
+
+                if operacao > 0 and operacao < 3: break
+            except:
+                bot.send_message(
+                    message.chat.id,
+                    '❌Opção de escolha entre digital e binária errada❌')
+                break
+
+        while True:
+            try:
+                timeframe = int(dados_config_tend.time_frame)
+                break
+            except:
+                bot.send_message(message.chat.id, '❌Time frame incorreto❌')
+                break
+
+        par = str(dados_config_tend.par).upper()
+        valor_entrada = float(dados_config_tend.valor_entrada)
+        valor_entrada_b = float(valor_entrada)
+
+        martingale = int(dados_config_tend.martingale)
+        martingale += 1
+
+        stop_loss = float(dados_config_tend.stop_loss)
+        stop_gain = float(dados_config_tend.stop_gain)
+        banca_inicial = API.get_balance()
+        lucro = 0
+        payout = Payout(par)
+        bot.send_message(message.chat.id, "✅Aguarde os resultados das suas operações✅\n" +
+                             "⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳⏳")
+        timestamp_ = int(round(datetime.now().timestamp()))
+        g=datetime.fromtimestamp(timestamp_).strftime('%H:%M')
+        if (int(g.split(':')[1]) % int(timeframe))==0:
+
+            while ligado:
+                minutos = float(((datetime.now()).strftime('%M.%S'))[1:])
+                entrar = True if (minutos >= 4.45 and minutos <= 5) or minutos >= 9.45 else False
+
+                velas = API.get_candles(par.upper(), (int(timeframe) * 60), 20,  time())
+                ultimo = round(velas[0]['close'], 3)
+                primeiro = round(velas[-1]['close'], 3)
+
+                diferenca = abs( round( ( (ultimo - primeiro)/primeiro ) * 100, 3) )
+                if ultimo < primeiro and diferenca > 0.01:
+                    dir = "call"
+                elif ultimo > primeiro and diferenca > 0.01:
+                    dir = "put"
+               
+                tendencia = "💹CALL" if ultimo < primeiro and diferenca > 0.01 else "🛑PUT" if ultimo > primeiro and diferenca > 0.01 else 'INDECISÃO' 
+                utcmoment_naive = datetime.utcnow()
+                utcmoment = utcmoment_naive.replace(tzinfo=pytz.utc)
+                timezones = ['America/Sao_Paulo']
+                for tz in timezones:
+                    localDatetime = utcmoment.astimezone(pytz.timezone(tz))
+                    
+                f=localDatetime.strftime('%H:%M')
+                e = noticias(par[3:6], f)
+                n = noticias(par[0:3], f)
+                if entrar:
+
+                    if (e!=True or n!=True):
+                        bot.send_message(message.chat.id,'❇====BOT DE TEDÊNCIA DE SINAL====❇'+
+                            '\nParidade: '+str(par)+
+                            '\n⏰: M'+str(timeframe)+
+                            '\nPayout: '+str(int(Payout(par)*100))+'%'
+                            '\nTendência da Próxima vela: '+str(tendencia))
+                        valor_entrada = valor_entrada_b
+                        for i in range(martingale):
+                            
+                            status, id = API.buy_digital_spot(par, valor_entrada, dir,timeframe) if operacao == 1 else API.buy(valor_entrada, par, dir, timeframe)
+
+                            if status:
+                                while True:
+                                    try:
+                                        status, valor = API.check_win_digital_v2(id) if operacao == 1 else API.check_win_v3(id)
+                                    except:
+                                        status = True
+                                        valor = 0
+
+                                    if status:
+                                        valor = valor if valor > 0 else float('-' + str(abs(valor_entrada)))
+                                        lucro += round(valor, 2)
+
+                                        msg = '''
+                                💹Resultado da operação💹\n
+
+                                RESULTADO:''' + ('✅WIN' if valor > 0 else '🚨LOSS') + '''
+                                LUCRO: 💲''' + str(round(valor, 2)) + '''\n
+                                ''' + (str(i)+ ' ♻GALE' if i > 0 else '') + '''\n'''
+                                        bot.send_message(message.chat.id,msg)
+
+                                        valor_entrada = Martingale(valor_entrada, payout)
+
+                                        if lucro <= float('-' +str(abs(stop_loss))):
+                                            bot.send_message(message.chat.id,'🚨Stop Loss batido!🚨\n'+
+                                                                            'Lucro obtido: -'+str(lucro)+
+                                                                            '\nBanca inicial: '+str(banca_inicial)+
+                                                                            '\nBanca atual: '+str(API.get_balance()))
+                                            return
+                                            break
+                                        if lucro >= float(abs(stop_gain)):
+                                            bot.send_message(message.chat.id,'✅Stop Gain Batido!✅\n'+
+                                                                            'Lucro obtido: -'+str(lucro)+
+                                                                            '\nBanca inicial: '+str(banca_inicial)+
+                                                                            '\nBanca atual: '+str(API.get_balance()))
+                                            return
+                                            break
+
+                                        if valor > 0: break
+
+                                        break
+
+                                if valor > 0: break
+
+                            else:
+                                bot.send_message(message.chat.id,'🚨ERRO AO REALIZAR OPERAÇÃO\n' +
+                                    'O activo selecionado não se encontra aberto.')
+                                break
+                                return
+
+                    else:
+                        bot.send_message(message.chat.id,'❇====HORÁRIO DE NOTÍCIA====❇'+
+                            '\nParidade: '+str(par)+
+                            '\n⏰: M'+str(timeframe)+
+                            '\nTendência da Próxima vela: '+str(tendencia)+
+                            '\n🚨Cuidado não opere, o impacto da notícia é maior que 1🚨'
+                            )
+
+    try:
+        @bot.message_handler(func=lambda message: message.text == '🔴Desligar Tendência')
+        def desligar(message):
+            global ligado
+            ligado = False
+            bot.send_message(message.chat.id,"🔴Bot de Tendência desligado!🔴")
+            return
+    except:
+        pass
 
 @bot.message_handler(func=lambda message: message.text == 'Estratégia Berman')
 def bot_estrategia_berman(message):
@@ -994,7 +1191,8 @@ def bot_catalogador(message):
 
                     hora_cat = horario.split(':')
                     hora_atual=datetime.now().strftime('%H:%M').split(':')
-                    if (int(hora_cat[0])==int(hora_atual[0])) or (int(hora_cat[0])>int(hora_atual[0])):
+                    f=datetime.now().strftime('%H:%M')
+                    if (int(hora_cat[0])==int(hora_atual[0])) or (int(hora_cat[0])>int(hora_atual[0])) and (noticias(par[3:6], f)!=True or noticias(par[0:3], f)!=True):
                         rs = horario + ',' + par + ',' + catalogacao[par][horario]['dir'].strip()
                         bot.send_message(message.chat.id,rs)
 
@@ -1024,7 +1222,7 @@ def bot_indicadores_tecnicos(message):
         try:       
             try:
                     
-                if (dados_config_login.email == None) or (dados_config_login.senha== None):
+                if (dados_config_login.email == None) or (dados_config_login.senha== None) or (dados_config_login.email == '') or (dados_config_login.senha== ''):
 
                         bot.send_message(message.chat.id,'🚨Erro verifique os dados de Login e tente novamente🚨')
 
@@ -1109,41 +1307,93 @@ def bot_indicadores_tecnicos(message):
                             sumShell = sumShell + str(data).count('sell')
                             sumBuy = sumBuy + str(data).count('buy')   
                 timestamp_ = int(round(datetime.now().timestamp()))
-                f=datetime.fromtimestamp(timestamp_).strftime('%H:%M')               
-                if oscdif != mavBuy:
-                    oscdif = mavBuy
-                    para_automaticamente=para_automaticamente+1
-                    #if para_automaticamente==10: break
-                    if (int(f.split(':')[1]) % int(timec))==0:
+                f=datetime.fromtimestamp(timestamp_).strftime('%H:%M')
+                if noticias(par[3:6], f)==True or noticias(par[0:3], f)==True:
+                    pass     
+                elif noticias(par[3:6], f)=='Notícia' or noticias(par[0:3], f)=='Notícia':         
+                    if oscdif != mavBuy:
+                        oscdif = mavBuy
+                        para_automaticamente=para_automaticamente+1
+                        #if para_automaticamente==10: break
+                        if (int(f.split(':')[1]) % int(timec))==0:
 
-                        if ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavShell)+int(oscShell)+int(sumShell))) and  ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavHold)+int(oscHold)+int(sumHold))):
-                            #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
-                            message = bot.send_message(message.chat.id, 
-                            '✅## Tendência do Sinal ##✅\n\n'+
-                            '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
-                            '\n===========================\n'+
-                            '⏰'+str(f)+
-                            '\n✅CALL'+
-                            '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
-            
-                        elif ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavBuy)+int(oscBuy)+int(sumBuy))) and  ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavHold)+int(oscHold)+int(sumHold))):
-                            #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
-                            message = bot.send_message(message.chat.id, 
-                            '✅## Tendência do Sinal ##✅\n\n'+
-                            '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
-                            '\n===========================\n'+
-                            '⏰'+str(f)+
-                            '\n🔴PUT'+
-                            '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
-                        elif ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavBuy)+int(oscBuy)+int(sumBuy))) and ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavShell)+int(oscShell)+int(sumShell))):
-                            #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
-                            message = bot.send_message(message.chat.id, 
-                            '✅## Tendência do Sinal ##✅\n\n'+
-                            '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
-                            '\n===========================\n'+
-                            '⏰'+str(f)+
-                            '\n🚨INDECISÃO--> NÃO ENTRAR'+
-                            '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+                            if ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavShell)+int(oscShell)+int(sumShell))) and  ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavHold)+int(oscHold)+int(sumHold))):
+                                #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                                message = bot.send_message(message.chat.id, 
+                                '✅## Tendência do Sinal ##✅\n\n'+
+                                '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                                '\n===========================\n'+
+                                '⏰'+str(f)+
+                                '\n✅CALL'+
+                                '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n'+
+                                '🚨Horario de notícia cuidado🚨\n'+
+                                'IMPACTO: 1'+
+                                '\nPara mais informações consute:\n'+
+                                'http://br.investing.com/economic-calendar/')
+                
+                            elif ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavBuy)+int(oscBuy)+int(sumBuy))) and  ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavHold)+int(oscHold)+int(sumHold))):
+                                #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                                message = bot.send_message(message.chat.id, 
+                                '✅## Tendência do Sinal ##✅\n\n'+
+                                '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                                '\n===========================\n'+
+                                '⏰'+str(f)+
+                                '\n🔴PUT'+
+                                '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n'+
+                                '🚨Horario de notícia cuidado🚨\n'+
+                                'IMPACTO: 1'+
+                                '\nPara mais informações consute:\n'+
+                                'http://br.investing.com/economic-calendar/')
+                            elif ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavBuy)+int(oscBuy)+int(sumBuy))) and ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavShell)+int(oscShell)+int(sumShell))):
+                                #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                                message = bot.send_message(message.chat.id, 
+                                '✅## Tendência do Sinal ##✅\n\n'+
+                                '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                                '\n===========================\n'+
+                                '⏰'+str(f)+
+                                '\n🚨INDECISÃO--> NÃO ENTRAR'+
+                                '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n'+
+                                '🚨Horario de notícia cuidado🚨\n'+
+                                'IMPACTO: 1'+
+                                '\nPara mais informações consute:\n'+
+                                'http://br.investing.com/economic-calendar/')
+
+                else:
+                    if oscdif != mavBuy:
+                        oscdif = mavBuy
+                        para_automaticamente=para_automaticamente+1
+                        #if para_automaticamente==10: break
+                        if (int(f.split(':')[1]) % int(timec))==0:
+
+                            if ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavShell)+int(oscShell)+int(sumShell))) and  ((int(mavBuy)+int(oscBuy)+int(sumBuy)) > (int(mavHold)+int(oscHold)+int(sumHold))):
+                                #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                                message = bot.send_message(message.chat.id, 
+                                '✅## Tendência do Sinal ##✅\n\n'+
+                                '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                                '\n===========================\n'+
+                                '⏰'+str(f)+
+                                '\n✅CALL'+
+                                '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+                
+                            elif ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavBuy)+int(oscBuy)+int(sumBuy))) and  ((int(mavShell)+int(oscShell)+int(sumShell)) > (int(mavHold)+int(oscHold)+int(sumHold))):
+                                #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                                message = bot.send_message(message.chat.id, 
+                                '✅## Tendência do Sinal ##✅\n\n'+
+                                '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                                '\n===========================\n'+
+                                '⏰'+str(f)+
+                                '\n🔴PUT'+
+                                '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+                            elif ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavBuy)+int(oscBuy)+int(sumBuy))) and ((int(mavHold)+int(oscHold)+int(sumHold))>(int(mavShell)+int(oscShell)+int(sumShell))):
+                                #if msgid > 0: bot.delete_message(session.chat.id, msgid) ⏰%Y-%m-%d
+                                message = bot.send_message(message.chat.id, 
+                                '✅## Tendência do Sinal ##✅\n\n'+
+                                '[DATA: '+str(datetime.now().strftime('%Y-%m-%d'))+']'+
+                                '\n===========================\n'+
+                                '⏰'+str(f)+
+                                '\n🚨INDECISÃO--> NÃO ENTRAR'+
+                                '\n## PAR: '+str(par).upper()+' | EXP: M'+str(timec)+'##\n\n')
+
         except:
             bot.send_message(message.chat.id,'🚨Upsi, verifique sua configuração.🚨\n'
                                              'Obs.: OTC não é elegível para este Bot')
@@ -1751,6 +2001,172 @@ def process_guardar_cat_step(message):
             bot_catalogador(message)
     except Exception as e:
         bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+@bot.message_handler(func=lambda message: message.text == '⚙Configurar Tendência')
+def config_da_tend(message):
+        msg = bot.reply_to(message,"Escolha em qual conta Operar:\n 1 - Treinamento\n 2 - REAL:")
+        bot.register_next_step_handler(msg, process_conta_tend_step)
+
+def process_conta_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            conta = message.text
+            if (not conta.isdigit()):
+                msg = bot.reply_to(message,'❌Opção inválida, escolha: \n1 para conta de Treinamento \n2 para Real')
+                bot.register_next_step_handler(msg, process_conta_tend_step)
+                return
+            dados = tendencia_config(conta)
+            config_tend[chat_id] = dados
+            msg = bot.reply_to(message,'Desejas operar na\n  1 - Digital\n  2 - Binaria:')
+            bot.register_next_step_handler(msg, process_operacao_tend_step)
+        except Exception as e:
+            bot.reply_to(message,
+                        '❌Upsi, ocorreu um erro, tente novamente /start❌')
+
+def process_operacao_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            operacao = message.text
+            if (not operacao.isdigit()):
+                msg = bot.reply_to(message,'❌Opção inválida, escolha: \n1 para Digital \n2 para Binaria:')
+                bot.register_next_step_handler(msg, process_operacao_tend_step)
+                return
+            dados = config_tend[chat_id]
+            dados.operacao = operacao
+            msg = bot.reply_to(message,'Em qual time frame deseja Operar?')
+            bot.register_next_step_handler(msg, process_time_frame_tend_step)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+def process_time_frame_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            time_frame = message.text
+            if (not time_frame.isdigit()):
+                msg = bot.reply_to(message,'❌Opção inválida, escolha: \n1 para M1, 5 para M5 ou 15 para M15:' )
+                bot.register_next_step_handler(msg, process_time_frame_tend_step)
+                return
+            dados = config_tend[chat_id]
+            dados.time_frame = time_frame
+            msg = bot.reply_to(message, 'Digite a paradidade por onde operar\n' +
+                'Ex.: EURUSD ou então EURUSD-OTC para mercado OTC:')
+            bot.register_next_step_handler(msg, process_par_tend_step)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+def process_par_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            par = message.text
+            if par.isdigit() or par == '':
+                msg = bot.reply_to(message,'❌Opção inválida, escolha por Ex.: EURUSD')
+                bot.register_next_step_handler(msg, process_par_tend_step)
+                return
+            dados = config_tend[chat_id]
+            dados.par = par
+            msg = bot.reply_to(message,'Digite o valor de entrada')
+            bot.register_next_step_handler(msg, process_valor_entrada_tend_step)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+def process_valor_entrada_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            valor_entrada = message.text
+            if float(valor_entrada) < 1:
+                msg = bot.reply_to(message,'❌O valor de entrada não pode ser menor que 1')
+                bot.register_next_step_handler(msg, process_valor_entrada_tend_step)
+                return
+            dados = config_tend[chat_id]
+            dados.valor_entrada = valor_entrada
+            msg = bot.reply_to(message, 'Indique a quantidade de Martingale\n' +
+               'Aconcelho indicar no máximo 2 níveis de Martingale')
+            bot.register_next_step_handler(msg, process_martingale_tend_step)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+def process_martingale_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            martingale = message.text
+            if (not martingale.isdigit()):
+                msg = bot.reply_to(message, '❌Opção inválida, digite apenas número inteiros')
+                bot.register_next_step_handler(msg, process_martingale_tend_step)
+                return
+            dados = config_tend[chat_id]
+            dados.martingale = martingale
+            msg = bot.reply_to(message, 'Digite o valor do stop Loss')
+            bot.register_next_step_handler(msg, process_stop_loss_tend_step)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+def process_stop_loss_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            stop_loss = message.text
+            if float(stop_loss) < 1:
+                msg = bot.reply_to(message,'❌Opção inválida, digite apenas números e maior ou igual a 1')
+                bot.register_next_step_handler(msg, process_stop_loss_tend_step)
+                return
+            dados = config_tend[chat_id]
+            dados.stop_loss = stop_loss
+            msg = bot.reply_to(message, 'Digite o valor do Stop Gain')
+            bot.register_next_step_handler(msg, process_stop_gain_tend_step)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+def process_stop_gain_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            stop_gain = message.text
+            if float(stop_gain) < 1:
+                msg = bot.reply_to(message, '❌Opção inválida, digite apenas número e maior que 0')
+                bot.register_next_step_handler(msg, process_stop_gain_tend_step)
+                return
+            dados = config_tend[chat_id]
+            dados.stop_gain = stop_gain
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
+            markup.add('✅Guardar', 'Alterar')
+            msg = bot.reply_to(message,'✅Desejas guardar os dados?✅',reply_markup=markup)
+            bot.register_next_step_handler(msg, process_guardar_tend_step)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
+def process_guardar_tend_step(message):
+        try:
+            chat_id = message.chat.id
+            salvar = message.text
+            dados = config_tend[chat_id]
+            if salvar == u'✅Guardar':
+
+                bot.send_message(message.chat.id, '✅Dados inseridos com sucesso✅' +
+                    '\nTipo de Conta: '+('Real' if int(dados.conta)==2 else 'Treinamento')
+                    +'\nOperar na: '+('Digital' if int(dados.operacao)==1 else 'Binária') 
+                    +'\nTime Frame: M' + str(dados.time_frame) 
+                    +'\nParidade: '+str(dados.par)
+                    +'\nValor de entrada: '+str(dados.valor_entrada) 
+                    +'\nNível de Martingale: '+str(dados.martingale) 
+                    +'\nStop Loss: '+str(dados.stop_loss)
+                    +'\nStop Gain: '+str(dados.stop_gain))
+
+                bot_tendencia(message)
+
+            elif salvar == u'Alterar':
+                msg = 'Escolha em qual conta Operar:\n 1 - Treinamento\n 2 - REAL:'
+                bot.register_next_step_handler(msg, process_conta_tend_step)
+            else:
+                dados.conta = None
+                dados.operacao = None
+                dados.time_frame == None
+                dados.par = None
+                dados.valor_entrada = None
+                dados.martingale = None
+                dados.stop_loss == None
+                dados.stop_gain = None
+                bot_tendencia(message)
+        except Exception as e:
+            bot.reply_to(message, '❌Upsi, houve um erro, tente novamente➡ /start')
+
 
 bot.enable_save_next_step_handlers(delay=2)
 bot.load_next_step_handlers()
