@@ -1,7 +1,7 @@
 colorama==0.4.4
 Deprecated==1.2.13
 distlib==0.3.4
-git+git://github.com/iqoptionapi/iqoptionapi.git
+https://github.com/iqoptionapi/iqoptionapi/archive/refs/heads/master.zip
 PyGithub==1.55
 pyTelegramBotAPI==4.2.2
 pytz==2021.3
