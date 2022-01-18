@@ -233,7 +233,7 @@ def send_welcome(message):
 
     except:
         bot.send_message(message.chat.id, "Olá tudo bem "+str(message.from_user.first_name)+
-                        " " + message.from_user.last_name + "?" +
+                        " "+str(message.from_user.last_name)+"?" +
                         "\nSeja bem vindo(a) ao ROBÔ ALPHA este é o seu ID: " +str(message.chat.id) +
                         "\nContacte @Zcreations1 para obter acesso ao bot! ")
 
