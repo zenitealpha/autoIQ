@@ -154,7 +154,7 @@ def send_welcome(message):
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=10)
             itembtng = types.KeyboardButton('🤖Listar Bots')
             markup.row(itembtng)
-            bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
+            bot.send_message(message.chat.id, "Olá tudo bem " +str(message.from_user.first_name)+
             '\nBem vindo de volta ao ROBÔ ALPHA',reply_markup=markup)
             try:
                 git_file ='lista_catalogada_{}.txt'.format(message.chat.id)
@@ -199,7 +199,7 @@ def send_welcome(message):
             markup.row(itembtnc, itembtnd)
             markup.row(itembtne)
             markup.row(itembtnf, itembtng)
-            bot.send_message(message.chat.id,"Bem-vindo de volta Super-Admin " +message.from_user.first_name,reply_markup=markup)
+            bot.send_message(message.chat.id,"Bem-vindo de volta Super-Admin " +str(message.from_user.first_name),reply_markup=markup)
 
         elif id_telegram == id_user and estado == 1 and plano == 'admin':
            
@@ -229,7 +229,7 @@ def send_welcome(message):
             markup.row(itembtnc, itembtnd)
             markup.row(itembtne)
             markup.row(itembtng)
-            bot.send_message(message.chat.id,"Bem-vindo de volta Admin "+message.from_user.first_name,reply_markup=markup)
+            bot.send_message(message.chat.id,"Bem-vindo de volta Admin "+str(message.from_user.first_name),reply_markup=markup)
 
     except:
         bot.send_message(message.chat.id, "Olá tudo bem " + message.from_user.first_name +
